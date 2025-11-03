@@ -8,49 +8,32 @@ const ProductListing = () => {
   const { products, filters, setFilters, searchQuery } = useContext(AppContext);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
-  // reset selected categories when main category changes
   useEffect(() => {
     setSelectedCategories([]);
   }, [category]);
 
-  // filter products by category 
   const categoryProducts = category && category !== "all" 
     ? products.filter(p => p.category === category)
     : products;
 
-  // search
-  const searchProducts = (productsToSearch, query) => {
-    if (!query.trim()) return productsToSearch;
-    
-    const searchTerm = query.toLowerCase().trim();
-    
-    return productsToSearch.filter(product => {
-      const nameMatch = product.name?.toLowerCase().includes(searchTerm);
-      const categoryMatch = product.category?.toLowerCase() === searchTerm;
-      
-      // either name or category match
-      return nameMatch || categoryMatch;
-    });
-  };
-
-  // appply filters
   const filteredProducts = (Array.isArray(categoryProducts) ? categoryProducts : [])
     .filter((p) => {
-      // search filter
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.toLowerCase().trim();
         const nameMatch = p.name?.toLowerCase().includes(searchTerm);
-        const categoryMatch = p.category?.toLowerCase() === searchTerm;
+        const categoryMatch = p.category?.toLowerCase().includes(searchTerm);
+        
         if (!nameMatch && !categoryMatch) return false;
       }
       
-      // price filter
       if (p.price > filters.price) return false;
       
-      // rating filter
       if (filters.rating && (p.rating || 0) < filters.rating) return false;
       
-    
+      if (selectedCategories.length > 0 && (!category || category === "all")) {
+        if (!selectedCategories.includes(p.category)) return false;
+      }
+      
       return true;
     })
     .sort((a, b) => {
@@ -59,7 +42,6 @@ const ProductListing = () => {
       return 0;
     });
 
-  // Ccategory filter based on current category
   const getCategoryFilters = () => {
     if (category === "men") {
       return [
@@ -108,7 +90,6 @@ const ProductListing = () => {
     setSelectedCategories([]);
   };
 
-  // loading state
   if (products.length === 0) {
     return <p className="text-center mt-5">Loading products...</p>;
   }
@@ -116,7 +97,6 @@ const ProductListing = () => {
   return (
     <div className="container-fluid mt-3">
       <div className="row">
-        {/* filters */}
         <div className="col-md-3">
           <div className="d-flex justify-content-between align-items-center">
             <h5>Filters</h5>
@@ -128,7 +108,6 @@ const ProductListing = () => {
             </button>
           </div>
 
-          {/* search Info */}
           {searchQuery && (
             <div className="alert alert-info mt-3">
               <small>Search: "{searchQuery}"</small>
@@ -141,8 +120,6 @@ const ProductListing = () => {
             </div>
           )}
 
-
-          {/* price filter */}
           <div className="mt-3">
             <label className="form-label">Max Price: ${filters.price}</label>
             <input
@@ -162,7 +139,6 @@ const ProductListing = () => {
             </div>
           </div>
 
-          {/* category filter */}
           <div className="mt-3">
             <h6>Category</h6>
             {getCategoryFilters().map((filter) => (
@@ -178,7 +154,6 @@ const ProductListing = () => {
             ))}
           </div>
 
-          {/* rating filter */}
           <div className="mt-3">
             <h6>Minimum Rating</h6>
             {[4, 3, 2, 1].map((r) => (
@@ -205,7 +180,6 @@ const ProductListing = () => {
             </div>
           </div>
 
-          {/* sort by */}
           <div className="mt-3">
             <h6>Sort By</h6>
             <div>
@@ -241,7 +215,6 @@ const ProductListing = () => {
           </div>
         </div>
 
-        {/* product section */}
         <div className="col-md-9">
           <div className="bg-light p-4 rounded">
             <div className="d-flex justify-content-between align-items-center mb-3">

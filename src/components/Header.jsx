@@ -14,9 +14,14 @@ const Header = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery) {
-      navigate(`/products/all?search=${searchQuery}`);
+    if (searchQuery.trim()) {
+      navigate(`/products/all?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(""); // Clear search after submit
     }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   return (
@@ -35,7 +40,7 @@ const Header = () => {
           type="search"
           placeholder="Search for products..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={handleSearchChange}
         />
         <button type="submit" className="btn btn-outline-light ms-2">
           Search
