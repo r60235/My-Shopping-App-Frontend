@@ -1,147 +1,185 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext.jsx";
 
-export default function Cart() {
-  const { cart, products, removeFromCart, toggleWishlist } = useAppContext();
-  
-  // filter products that are in cart
-  const items = products.filter((p) => p && cart.includes(p._id));
+const ProductDetails = () => {
+  const { id } = useParams();
+  const { products, cart, wishlist, addToCart, removeFromCart, toggleWishlist } = useAppContext();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedSize, setSelectedSize] = useState("");
 
-  // quantity mapping local state
-  const [quantities, setQuantities] = useState(
-    items.reduce((acc, it) => ({ ...acc, [it._id]: 1 }), {})
-  );
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      try {
+        setLoading(true);
+        const foundProduct = products.find(p => String(p._id) === String(id));
+        
+        if (foundProduct) {
+          setProduct(foundProduct);
+        } else {
+          const response = await fetch(`http://localhost:5001/product/${id}`);
+          if (response.ok) {
+            const productData = await response.json();
+            setProduct(productData);
+          } else {
+            console.error('product not found');
+          }
+        }
+      } catch (error) {
+        console.error('error fetching product:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const inc = (id) => setQuantities((q) => ({ ...q, [id]: (q[id] || 1) + 1 }));
-  const dec = (id) =>
-    setQuantities((q) => ({ ...q, [id]: q[id] && q[id] > 1 ? q[id] - 1 : 1 }));
+    if (id) {
+      fetchProductDetails();
+    }
+  }, [id, products]);
 
-  // order totals
-  const subtotal = items.reduce((s, p) => s + p.price * (quantities[p._id] || 1), 0);
-  const discount = 0; 
-  const deliveryCharges = subtotal > 100 ? 0 : 10;
-  const total = subtotal - discount + deliveryCharges;
+  if (loading) {
+    return <div className="container mt-5 text-center">loading product details...</div>;
+  }
+
+  if (!product) {
+    return (
+      <div className="container mt-5 text-center">
+        <p>product not found</p>
+        <Link to="/products/all" className="btn btn-dark">back to products</Link>
+      </div>
+    );
+  }
+
+  const isClothing = ["men", "women", "kids"].includes(String(product.category).toLowerCase());
+  const inCart = cart.includes(product._id);
+  const inWishlist = wishlist.includes(product._id);
 
   return (
-    <div className="container my-4">
-      <h4>Your Cart ({items.length})</h4>
-      <div className="row mt-3 g-3">
-        <div className="col-md-8">
-          {items.map((p) => (
-            <div key={p._id} className="card p-3 mb-3">
-              <div className="d-flex gap-3 align-items-center">
-                {/* product image clickable */}
-                <Link to={`/product/${p._id}`} className="text-decoration-none">
-                  <img 
-                    src={p.image} 
-                    alt={p.name} 
-                    style={{
-                      width:120, 
-                      height:80, 
-                      objectFit:'cover',
-                      cursor: 'pointer'
-                    }} 
-                  />
-                </Link>
-                
-                <div className="flex-grow-1">
-                  {/* product name link */}
-                  <Link to={`/product/${p._id}`} className="text-decoration-none text-dark">
-                    <div className="fw-bold" style={{ cursor: 'pointer' }}>{p.name}</div>
-                  </Link>
-                  <div className="text-muted">${p.price.toFixed(2)}</div>
-                  <div className="text-muted small text-capitalize">{p.category}</div>
-                </div>
+    <div className="container mt-4">
+      <Link 
+        to={product?.category ? `/products/${product.category}` : '/products/all'}
+        className="btn btn-outline-secondary mb-3 text-decoration-none"
+      >
+        ← back to {product.category ? `${product.category} products` : 'products'}
+      </Link>
 
-                <div className="d-flex flex-column align-items-center">
-                  <div className="d-flex align-items-center mb-2">
-                    <button 
-                      className="btn btn-outline-secondary btn-sm" 
-                      onClick={() => dec(p._id)}
-                    >
-                      -
-                    </button>
-                    <span className="mx-2">{quantities[p._id] || 1}</span>
-                    <button 
-                      className="btn btn-outline-secondary btn-sm" 
-                      onClick={() => inc(p._id)}
-                    >
-                      +
-                    </button>
-                  </div>
+      <div className="row g-4">
+        <div className="col-md-6">
+          <img 
+            src={product.image || "https://placehold.co/600x400?text=no+image"} 
+            className="img-fluid rounded" 
+            alt={product.name} 
+            style={{ maxHeight: "500px", objectFit: "cover", width: "100%" }}
+          />
+        </div>
+        
+        <div className="col-md-6">
+          <h3>{product.name}</h3>
+          <div className="mb-2">
+            <strong className="fs-4">${product.price?.toFixed(2)}</strong>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-muted text-decoration-line-through ms-2">
+                ${product.originalPrice?.toFixed(2)}
+              </span>
+            )}
+          </div>
 
-                  <div className="d-flex gap-2">
-                    <button 
-                      className="btn btn-outline-primary btn-sm" 
-                      onClick={() => toggleWishlist(p._id)}
-                    >
-                      Move to Wishlist
-                    </button>
-                    <button 
-                      className="btn btn-outline-danger btn-sm" 
-                      onClick={() => removeFromCart(p._id)}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
+          <div className="mb-3">
+            <label className="form-label fw-bold">description</label>
+            <p className="text-muted">{product.description || "no description available"}</p>
+          </div>
+
+          {isClothing && (
+            <div className="mb-3">
+              <label className="form-label fw-bold">size</label>
+              <div>
+                {["S","M","L","XL","XXL"].map((s) => (
+                  <button 
+                    key={s} 
+                    className={`btn btn-sm me-2 mb-2 ${selectedSize === s ? 'btn-dark' : 'btn-outline-secondary'}`}
+                    onClick={() => setSelectedSize(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
-            </div>
-          ))}
-
-          {items.length === 0 && (
-            <div className="text-center mt-4">
-              <p>Your cart is empty.</p>
-              <Link to="/products/all" className="btn btn-primary">
-                Continue Shopping
-              </Link>
+              {selectedSize && (
+                <small className="text-muted">selected size: {selectedSize}</small>
+              )}
             </div>
           )}
-        </div>
 
-        <div className="col-md-4">
-          <div className="card p-3">
-            <h5>Order Summary</h5>
+          <div className="mb-3">
+            {!inCart ? (
+              <button 
+                className="btn btn-dark me-2" 
+                onClick={() => addToCart(product._id)}
+              >
+                add to cart
+              </button>
+            ) : (
+              <button 
+                className="btn btn-danger me-2" 
+                onClick={() => removeFromCart(product._id)}
+              >
+                remove from cart
+              </button>
+            )}
             
-            <div className="d-flex justify-content-between mb-2">
-              <div>Items ({items.length})</div>
-              <div>${subtotal.toFixed(2)}</div>
-            </div>
-            
-            <div className="d-flex justify-content-between mb-2">
-              <div>Discount</div>
-              <div className="text-success">-${discount.toFixed(2)}</div>
-            </div>
-            
-            <div className="d-flex justify-content-between mb-2">
-              <div>Delivery Charges</div>
-              <div>{deliveryCharges === 0 ? 'FREE' : `$${deliveryCharges.toFixed(2)}`}</div>
-            </div>
-            
-            <hr />
-            
-            <div className="d-flex justify-content-between fw-bold fs-5">
-              <div>Total Amount</div>
-              <div>${total.toFixed(2)}</div>
-            </div>
-
-          
-
             <button 
-              className="btn btn-dark w-100 mt-3" 
-              onClick={() => alert("Order placed successfully! (demo)")}
-              disabled={items.length === 0}
+              className={`btn ${inWishlist ? 'btn-danger' : 'btn-outline-danger'}`} 
+              onClick={() => toggleWishlist(product._id)}
             >
-              {items.length === 0 ? 'Cart is Empty' : 'Place Order'}
+              {inWishlist ? 'remove from wishlist' : 'add to wishlist'}
             </button>
-            
-            <Link to="/products/all" className="btn btn-outline-primary w-100 mt-2">
-              Continue Shopping
-            </Link>
+          </div>
+
+          <div className="mt-4 d-flex gap-3">
+            <div className="text-center">
+              <div style={{fontSize:24}}>↩️</div>
+              <small>10 day returnable</small>
+            </div>
+            <div className="text-center">
+              <div style={{fontSize:24}}>💳</div>
+              <small>pay on delivery</small>
+            </div>
+            <div className="text-center">
+              <div style={{fontSize:24}}>🚚</div>
+              <small>free delivery</small>
+            </div>
           </div>
         </div>
       </div>
+
+      <hr className="my-4" />
+
+      <h5>more from this category</h5>
+      <div className="d-flex flex-wrap gap-3 mt-3">
+        {products
+          .filter((p) => p._id !== product._id && p.category === product.category)
+          .slice(0,4)
+          .map((r) => (
+            <div key={r._id} style={{width:200}}>
+              <Link to={`/product/${r._id}`} className="text-decoration-none text-dark">
+                <div className="card">
+                  <img 
+                    src={r.image || "https://placehold.co/200x120?text=no+image"} 
+                    alt={r.name} 
+                    style={{height:120, objectFit:"cover"}} 
+                    className="card-img-top" 
+                  />
+                  <div className="card-body">
+                    <div className="fw-bold">{r.name}</div>
+                    <div>${r.price?.toFixed(2)}</div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+      </div>
     </div>
   );
-}
+};
+
+export default ProductDetails;
