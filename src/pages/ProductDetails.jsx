@@ -3,28 +3,22 @@ import { useParams, Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext.jsx";
 
 const ProductDetails = () => {
-  // get product id from url
   const { id } = useParams();
-  
-  //
   const { products, cart, wishlist, addToCart, removeFromCart, toggleWishlist } = useAppContext();
-  
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedSize, setSelectedSize] = useState("");
 
-  // fetch product details when component loads or id changes
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        // try to find product in context first
         const foundProduct = products.find(p => String(p._id) === String(id));
         
         if (foundProduct) {
           setProduct(foundProduct);
         } else {
-          // fetch from api if not in context
-          const response = await fetch(`https://my-shopping-app-backend.vercel.app/product/${id}`);
+          const response = await fetch(`http://localhost:5001/product/${id}`);
           if (response.ok) {
             const productData = await response.json();
             setProduct(productData);
@@ -44,12 +38,10 @@ const ProductDetails = () => {
     }
   }, [id, products]);
 
-  // loading
   if (loading) {
     return <div className="container mt-5 text-center">loading product details...</div>;
   }
 
-  // show error (product not found)
   if (!product) {
     return (
       <div className="container mt-5 text-center">
@@ -59,14 +51,12 @@ const ProductDetails = () => {
     );
   }
 
-  // check if product is clothing and if it's in cart/wishlist
   const isClothing = ["men", "women", "kids"].includes(String(product.category).toLowerCase());
   const inCart = cart.includes(product._id);
   const inWishlist = wishlist.includes(product._id);
 
   return (
     <div className="container mt-4">
-      {/* back to products link */}
       <Link 
         to={product?.category ? `/products/${product.category}` : '/products/all'}
         className="btn btn-outline-secondary mb-3 text-decoration-none"
@@ -75,7 +65,6 @@ const ProductDetails = () => {
       </Link>
 
       <div className="row g-4">
-        {/* product image */}
         <div className="col-md-6">
           <img 
             src={product.image || "https://placehold.co/600x400?text=no+image"} 
@@ -85,7 +74,6 @@ const ProductDetails = () => {
           />
         </div>
         
-        {/* product info and actions */}
         <div className="col-md-6">
           <h3>{product.name}</h3>
           <div className="mb-2">
@@ -96,21 +84,29 @@ const ProductDetails = () => {
               </span>
             )}
           </div>
-          <p className="text-muted">{product.description || "no description available"}</p>
 
-          {/* size selector for clothing */}
+          <div className="mb-3">
+            <label className="form-label fw-bold">Description</label>
+            <p className="text-muted">{product.description || "no description available"}</p>
+          </div>
+
           {isClothing && (
             <div className="mb-3">
-              <label className="form-label fw-bold">size</label>
+              <label className="form-label fw-bold">Size</label>
               <div>
-                {["S","M","L","XL","XXL"].map((s) => (
-                  <button key={s} className="btn btn-outline-secondary btn-sm me-2 mb-2">{s}</button>
+                {["S","M","L","XL","XXL"].map((size) => (
+                  <button 
+                    key={size} 
+                    className={`btn btn-outline-secondary btn-sm me-2 mb-2 ${selectedSize === size ? 'btn-dark' : 'btn-outline-secondary'}`}
+                    onClick={() => setSelectedSize(size)}
+                  >
+                    {size}
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* cart and wishlist buttons */}
           <div className="mb-3">
             {!inCart ? (
               <button 
@@ -136,7 +132,6 @@ const ProductDetails = () => {
             </button>
           </div>
 
-          {/* product features */}
           <div className="mt-4 d-flex gap-3">
             <div className="text-center">
               <div style={{fontSize:24}}>↩️</div>
@@ -156,7 +151,6 @@ const ProductDetails = () => {
 
       <hr className="my-4" />
 
-      {/* related products from same category */}
       <h5>more from this category</h5>
       <div className="d-flex flex-wrap gap-3 mt-3">
         {products
