@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { toast } from 'react-toastify';
 import { useAppContext } from "../context/AppContext.jsx";
 
 const ProductDetails = () => {
@@ -8,6 +9,7 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState("");
+  const [showSizeModal, setShowSizeModal] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -18,7 +20,7 @@ const ProductDetails = () => {
         if (foundProduct) {
           setProduct(foundProduct);
         } else {
-          const response = await fetch(`https://my-shopping-app-backend.vercel.app/product/${id}`);
+const response = await fetch(`https://my-shopping-app-backend.vercel.app/product/${id}`);
           if (response.ok) {
             const productData = await response.json();
             setProduct(productData);
@@ -38,6 +40,55 @@ const ProductDetails = () => {
     }
   }, [id, products]);
 
+  const isClothing = ["men", "women", "kids"].includes(String(product?.category).toLowerCase());
+  
+  // Check if product is in cart with the currently selected size
+  const cartItemsForProduct = cart.filter(item => item.productId === product?._id);
+  const isCurrentSizeInCart = cartItemsForProduct.some(item => item.size === selectedSize);
+  const isAnySizeInCart = cartItemsForProduct.length > 0;
+
+  const handleAddToCart = () => {
+    if (isClothing && !selectedSize) {
+      toast.warning("Please select a size before adding to cart!");
+      return;
+    }
+    
+    addToCart(product._id, selectedSize);
+    toast.success(`${product.name} ${selectedSize ? `(Size: ${selectedSize})` : ''} added to cart!`);
+    setSelectedSize(""); // Reset size after adding to cart
+  };
+
+  const handleSizeSelect = (size) => {
+    setSelectedSize(size);
+    setShowSizeModal(false);
+  };
+
+  const handleSizeSelectAndAdd = (size) => {
+    setSelectedSize(size);
+    setShowSizeModal(false);
+    addToCart(product._id, size);
+    toast.success(`${product.name} (Size: ${size}) added to cart!`);
+    setSelectedSize(""); // Reset size after adding to cart
+  };
+
+  // Remove specific size from cart
+  const handleRemoveFromCart = (size = "") => {
+    if (size) {
+      // Remove specific size
+      const itemToRemove = cartItemsForProduct.find(item => item.size === size);
+      if (itemToRemove) {
+        removeFromCart(itemToRemove.id);
+        toast.info(`${product.name} (Size: ${size}) removed from cart!`);
+      }
+    } else {
+      // Remove all sizes
+      cartItemsForProduct.forEach(item => {
+        removeFromCart(item.id);
+      });
+      toast.info(`${product.name} removed from cart!`);
+    }
+  };
+
   if (loading) {
     return <div className="container mt-5 text-center">loading product details...</div>;
   }
@@ -46,13 +97,11 @@ const ProductDetails = () => {
     return (
       <div className="container mt-5 text-center">
         <p>product not found</p>
-        <Link to="/products/all" className="btn btn-dark">back to products</Link>
+        <Link to="/products/all" className="btn btn-dark">Back to products</Link>
       </div>
     );
   }
 
-  const isClothing = ["men", "women", "kids"].includes(String(product.category).toLowerCase());
-  const inCart = cart.includes(product._id);
   const inWishlist = wishlist.includes(product._id);
 
   return (
@@ -61,7 +110,7 @@ const ProductDetails = () => {
         to={product?.category ? `/products/${product.category}` : '/products/all'}
         className="btn btn-outline-secondary mb-3 text-decoration-none"
       >
-        ← back to {product.category ? `${product.category} products` : 'products'}
+        ← Back to {product.category ? `${product.category} products` : 'products'}
       </Link>
 
       <div className="row g-4">
@@ -92,7 +141,7 @@ const ProductDetails = () => {
 
           {isClothing && (
             <div className="mb-3">
-              <label className="form-label fw-bold">Size</label>
+              <label className="form-label fw-bold">Size {selectedSize && `- Selected: ${selectedSize}`}</label>
               <div>
                 {["S","M","L","XL","XXL"].map((size) => (
                   <button 
@@ -108,19 +157,20 @@ const ProductDetails = () => {
           )}
 
           <div className="mb-3">
-            {!inCart ? (
+            {/* Show Add to Cart if no size selected OR if selected size is not in cart */}
+            {!isCurrentSizeInCart ? (
               <button 
                 className="btn btn-dark me-2" 
-                onClick={() => addToCart(product._id)}
+                onClick={handleAddToCart}
               >
-                add to cart
+                Add to cart
               </button>
             ) : (
               <button 
                 className="btn btn-danger me-2" 
-                onClick={() => removeFromCart(product._id)}
+                onClick={() => handleRemoveFromCart(selectedSize)}
               >
-                remove from cart
+                Remove {selectedSize && `Size ${selectedSize}`} from cart
               </button>
             )}
             
@@ -128,9 +178,20 @@ const ProductDetails = () => {
               className={`btn ${inWishlist ? 'btn-danger' : 'btn-outline-danger'}`} 
               onClick={() => toggleWishlist(product._id)}
             >
-              {inWishlist ? 'remove from wishlist' : 'add to wishlist'}
+              {inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             </button>
           </div>
+
+          {cartItemsForProduct.length > 0 && (
+            <div className="alert alert-info">
+              <strong>In your cart:</strong>
+              {cartItemsForProduct.map((item, index) => (
+                <div key={item.id}>
+                  {index + 1}. {product.name} {item.size && `- Size: ${item.size}`}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="mt-4 d-flex gap-3">
             <div className="text-center">
@@ -149,9 +210,36 @@ const ProductDetails = () => {
         </div>
       </div>
 
+      {showSizeModal && (
+        <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Select Size</h5>
+                <button type="button" className="btn-close" onClick={() => setShowSizeModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>Please select a size for <strong>{product.name}</strong>:</p>
+                <div className="d-flex gap-2 flex-wrap">
+                  {["S","M","L","XL","XXL"].map((size) => (
+                    <button 
+                      key={size}
+                      className="btn btn-outline-dark"
+                      onClick={() => handleSizeSelectAndAdd(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <hr className="my-4" />
 
-      <h5>more from this category</h5>
+      <h5>More from this category</h5>
       <div className="d-flex flex-wrap gap-3 mt-3">
         {products
           .filter((p) => p._id !== product._id && p.category === product.category)

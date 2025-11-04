@@ -71,15 +71,19 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // add to cart
-  const addToCart = (productId) => {
-    if (!cart.includes(productId)) {
-      setCart([...cart, productId]);
-    }
+  // add to cart with size
+  const addToCart = (productId, size = "") => {
+    const cartItem = {
+      productId: productId,
+      size: size,
+      id: `${productId}-${size || "nosize"}` // unique ID for cart item
+    };
+    
+    setCart(prevCart => [...prevCart, cartItem]);
   };
 
-  const removeFromCart = (productId) => {
-    setCart(cart.filter(id => id !== productId));
+  const removeFromCart = (cartItemId) => {
+    setCart(cart.filter(item => item.id !== cartItemId));
   };
 
   // wishlist

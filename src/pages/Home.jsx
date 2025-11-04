@@ -21,40 +21,42 @@ const Home = () => {
         />
       </div>
 
-      <div className="container mt-4 text-center bg-light border-rounded">
-        <h4 className="mb-3 py-3">Shop by Category</h4>
-        <div className="d-flex justify-content-center flex-wrap gap-3 mb-4">
-          {categories.map((cat) => (
-            <Link
-              key={cat.name}
-              to={`/products/${cat.path}`}
-              className="text-decoration-none text-dark"
-            >
-              <div
-                className="card p-2"
-                style={{
-                  width: "180px",
-                  cursor: "pointer",
-                  transition: "transform 0.2s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      <div className="w-100 bg-light py-4" style={{ marginBottom: '0' }}>
+        <div className="text-center">
+          <h4 className="mb-4">Shop by Category</h4>
+          <div className="d-flex justify-content-center flex-wrap gap-3">
+            {categories.map((cat) => (
+              <Link
+                key={cat.name}
+                to={`/products/${cat.path}`}
+                className="text-decoration-none text-dark"
               >
-                <img
-                  src={cat.img}
-                  className="card-img-top"
-                  alt={cat.name}
-                  style={{ height: "120px", objectFit: "cover" }}
-                />
-                <div className="card-body">
-                  <h6 className="card-title">{cat.name}</h6>
+                <div
+                  className="card p-2"
+                  style={{
+                    width: "180px",
+                    cursor: "pointer",
+                    transition: "transform 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                >
+                  <img
+                    src={cat.img}
+                    className="card-img-top"
+                    alt={cat.name}
+                    style={{ height: "120px", objectFit: "cover" }}
+                  />
+                  <div className="card-body">
+                    <h6 className="card-title">{cat.name}</h6>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
 
-        <div className="d-flex justify-content-center gap-4 flex-wrap">
+        <div className="d-flex justify-content-center gap-4 flex-wrap mt-4">
           <Link to="/products/all" className="text-decoration-none">
             <div className="card p-3 shadow-sm" style={{ width: "350px" }}>
               <img

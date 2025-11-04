@@ -16,7 +16,7 @@ const Header = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/products/all?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(""); // Clear search after submit
+      setSearchQuery("");
     }
   };
 
