@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useAppContext } from "../context/AppContext.jsx";
 
 export default function Cart() {
-  const { cart, products, removeFromCart, toggleWishlist } = useAppContext();
+  const { cart, products, removeFromCart, toggleWishlist, wishlist } = useAppContext();
   
   // Get product details for each cart item and group by productId and size
   const cartItems = cart.map(cartItem => {
@@ -39,7 +39,12 @@ export default function Cart() {
 
   const handleMoveToWishlist = (productId, productName) => {
     toggleWishlist(productId);
-    toast.success(`${productName} moved to wishlist!`);
+    const isInWishlist = wishlist.includes(productId);
+    if (isInWishlist) {
+      toast.success(`${productName} added to wishlist!`);
+    } else {
+      toast.info(`${productName} removed from wishlist!`);
+    }
   };
 
   // order totals
@@ -79,83 +84,86 @@ export default function Cart() {
                   <h5 className="mb-0">Cart Items</h5>
                 </div>
                 <div className="card-body p-0">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="cart-item border-bottom p-4">
-                      <div className="row align-items-center">
-                        <div className="col-md-2">
-                          <Link to={`/product/${item.product._id}`} className="text-decoration-none">
-                            <img 
-                              src={item.product.image} 
-                              alt={item.product.name} 
-                              className="img-fluid rounded shadow-sm"
-                              style={{
-                                width: '100%',
-                                height: 100,
-                                objectFit: 'cover',
-                                cursor: 'pointer'
-                              }} 
-                            />
-                          </Link>
-                        </div>
-                        
-                        <div className="col-md-4">
-                          <Link to={`/product/${item.product._id}`} className="text-decoration-none text-dark">
-                            <h6 className="fw-bold mb-1" style={{ cursor: 'pointer' }}>{item.product.name}</h6>
-                          </Link>
-                          <p className="text-muted small mb-1 text-capitalize">{item.product.category}</p>
-                          {item.size && (
-                            <span className="badge bg-light text-dark border">Size: {item.size}</span>
-                          )}
-                        </div>
-
-                        <div className="col-md-2 text-center">
-                          <div className="h5 text-primary mb-0">${item.product.price.toFixed(2)}</div>
-                          <small className="text-muted">each</small>
-                        </div>
-
-                        <div className="col-md-2">
-                          <div className="d-flex align-items-center justify-content-center">
-                            <button 
-                              className="btn btn-outline-secondary btn-sm" 
-                              onClick={() => dec(item.id)}
-                              disabled={quantities[item.id] <= 1}
-                            >
-                              −
-                            </button>
-                            <span className="mx-3 fw-bold">{quantities[item.id] || 1}</span>
-                            <button 
-                              className="btn btn-outline-secondary btn-sm" 
-                              onClick={() => inc(item.id)}
-                            >
-                              +
-                            </button>
+                  {cartItems.map((item) => {
+                    const isInWishlist = wishlist.includes(item.product._id);
+                    return (
+                      <div key={item.id} className="cart-item border-bottom p-4">
+                        <div className="row align-items-center">
+                          <div className="col-md-2">
+                            <Link to={`/product/${item.product._id}`} className="text-decoration-none">
+                              <img 
+                                src={item.product.image} 
+                                alt={item.product.name} 
+                                className="img-fluid rounded shadow-sm"
+                                style={{
+                                  width: '100%',
+                                  height: 100,
+                                  objectFit: 'cover',
+                                  cursor: 'pointer'
+                                }} 
+                              />
+                            </Link>
                           </div>
-                        </div>
-
-                        <div className="col-md-2 text-center">
-                          <div className="h6 fw-bold mb-2">
-                            ${((item.product.price * (quantities[item.id] || 1)).toFixed(2))}
+                          
+                          <div className="col-md-4">
+                            <Link to={`/product/${item.product._id}`} className="text-decoration-none text-dark">
+                              <h6 className="fw-bold mb-1" style={{ cursor: 'pointer' }}>{item.product.name}</h6>
+                            </Link>
+                            <p className="text-muted small mb-1 text-capitalize">{item.product.category}</p>
+                            {item.size && (
+                              <span className="badge bg-light text-dark border">Size: {item.size}</span>
+                            )}
                           </div>
-                          <div className="d-flex gap-1 justify-content-center">
-                            <button 
-                              className="btn btn-outline-primary btn-sm" 
-                              onClick={() => handleMoveToWishlist(item.product._id, item.product.name)}
-                              title="Move to Wishlist"
-                            >
-                              ♥
-                            </button>
-                            <button 
-                              className="btn btn-outline-danger btn-sm" 
-                              onClick={() => handleRemoveFromCart(item.id, item.product.name, item.size)}
-                              title="Remove Item"
-                            >
-                              🗑️
-                            </button>
+
+                          <div className="col-md-2 text-center">
+                            <div className="h5 text-primary mb-0">${item.product.price.toFixed(2)}</div>
+                            <small className="text-muted">each</small>
+                          </div>
+
+                          <div className="col-md-2">
+                            <div className="d-flex align-items-center justify-content-center">
+                              <button 
+                                className="btn btn-outline-secondary btn-sm" 
+                                onClick={() => dec(item.id)}
+                                disabled={quantities[item.id] <= 1}
+                              >
+                                −
+                              </button>
+                              <span className="mx-3 fw-bold">{quantities[item.id] || 1}</span>
+                              <button 
+                                className="btn btn-outline-secondary btn-sm" 
+                                onClick={() => inc(item.id)}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="col-md-2 text-center">
+                            <div className="h6 fw-bold mb-2">
+                              ${((item.product.price * (quantities[item.id] || 1)).toFixed(2))}
+                            </div>
+                            <div className="d-flex gap-1 justify-content-center">
+                              <button 
+                                className={`btn btn-sm ${isInWishlist ? 'btn-primary' : 'btn-outline-primary'}`} 
+                                onClick={() => handleMoveToWishlist(item.product._id, item.product.name)}
+                                title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                              >
+                                {isInWishlist ? '♥ In Wishlist' : '♥ Wishlist'}
+                              </button>
+                              <button 
+                                className="btn btn-outline-danger btn-sm" 
+                                onClick={() => handleRemoveFromCart(item.id, item.product.name, item.size)}
+                                title="Remove Item"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -191,6 +199,7 @@ export default function Cart() {
                     <span className="fs-5 fw-bold">Total Amount</span>
                     <span className="fs-4 fw-bold text-primary">${total.toFixed(2)}</span>
                   </div>
+
 
 
                   <button 

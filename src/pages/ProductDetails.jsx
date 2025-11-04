@@ -20,7 +20,7 @@ const ProductDetails = () => {
         if (foundProduct) {
           setProduct(foundProduct);
         } else {
-const response = await fetch(`https://my-shopping-app-backend.vercel.app/product/${id}`);
+const response = await fetch(`http://localhost:5001/product/${id}`);
           if (response.ok) {
             const productData = await response.json();
             setProduct(productData);
