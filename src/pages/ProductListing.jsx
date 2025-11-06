@@ -7,10 +7,66 @@ const ProductListing = () => {
   const { category } = useParams();
   const { products, filters, setFilters, searchQuery } = useAppContext();
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // func to determine product subcategory based on name and category
+  const getProductSubcategory = (product) => {
+    const name = product.name.toLowerCase();
+    if (name.includes('shirt') || name.includes('t-shirt')) return 'shirts';
+    if (name.includes('pant') || name.includes('jeans')) return 'pants';
+    if (name.includes('jacket') || name.includes('coat')) return 'jackets';
+    if (name.includes('shoe') || name.includes('sneaker')) return 'shoes';
+    if (name.includes('dress')) return 'dresses';
+    if (name.includes('top') || name.includes('blouse')) return 'tops';
+    if (name.includes('bag') || name.includes('handbag')) return 'bags';
+    if (name.includes('jewelry') || name.includes('earring') || name.includes('necklace')) return 'accessories';
+    if (name.includes('watch')) return 'watches';
+    if (name.includes('headphone') || name.includes('earbud')) return 'audio';
+    return 'other';
+  };
+
+  // Get subcategories based on main category
+  const getSubcategories = () => {
+    if (category === "men") {
+      return [
+        { id: "men-shirts", label: "Shirts", value: "shirts" },
+        { id: "men-pants", label: "Pants", value: "pants" },
+        { id: "men-jackets", label: "Jackets", value: "jackets" },
+        { id: "men-shoes", label: "Shoes", value: "shoes" },
+        { id: "men-accessories", label: "Accessories", value: "accessories" }
+      ];
+    } else if (category === "women") {
+      return [
+        { id: "women-dresses", label: "Dresses", value: "dresses" },
+        { id: "women-tops", label: "Tops", value: "tops" },
+        { id: "women-pants", label: "Pants", value: "pants" },
+        { id: "women-bags", label: "Bags", value: "bags" },
+        { id: "women-shoes", label: "Shoes", value: "shoes" },
+        { id: "women-accessories", label: "Accessories", value: "accessories" }
+      ];
+    } else if (category === "kids") {
+      return [
+        { id: "kids-clothing", label: "Clothing", value: "clothing" },
+        { id: "kids-shoes", label: "Shoes", value: "shoes" },
+        { id: "kids-toys", label: "Toys", value: "toys" },
+        { id: "kids-accessories", label: "Accessories", value: "accessories" }
+      ];
+    } else if (category === "electronics") {
+      return [
+        { id: "elec-audio", label: "Audio", value: "audio" },
+        { id: "elec-wearables", label: "Wearables", value: "wearables" },
+        { id: "elec-mobiles", label: "Mobiles", value: "mobiles" },
+        { id: "elec-laptops", label: "Laptops", value: "laptops" }
+      ];
+    } else {
+      return [];
+    }
+  };
 
   useEffect(() => {
     setSelectedCategories([]);
+    setSelectedSubcategories([]);
   }, [category]);
 
   const categoryProducts = category && category !== "all" 
@@ -33,6 +89,12 @@ const ProductListing = () => {
       
       if (selectedCategories.length > 0 && (!category || category === "all")) {
         if (!selectedCategories.includes(p.category)) return false;
+      }
+      
+      // Subcategory filtering
+      if (selectedSubcategories.length > 0) {
+        const productSubcategory = getProductSubcategory(p);
+        if (!selectedSubcategories.includes(productSubcategory)) return false;
       }
       
       return true;
@@ -86,9 +148,19 @@ const ProductListing = () => {
     }
   };
 
+  // Handle subcategory filter change
+  const handleSubcategoryFilterChange = (subcategoryValue, isChecked) => {
+    if (isChecked) {
+      setSelectedSubcategories(prev => [...prev, subcategoryValue]);
+    } else {
+      setSelectedSubcategories(prev => prev.filter(sub => sub !== subcategoryValue));
+    }
+  };
+
   const handleClearAllFilters = () => {
     setFilters({ category: "", price: "any", rating: "", sort: "" });
     setSelectedCategories([]);
+    setSelectedSubcategories([]);
   };
 
   const priceRanges = [
@@ -128,7 +200,6 @@ const ProductListing = () => {
         </div>
       )}
 
-      {/* REPLACED: Price Dropdown instead of Slider */}
       <div className="mb-4">
         <label className="form-label fw-bold">Price Range</label>
         <select
@@ -144,21 +215,24 @@ const ProductListing = () => {
         </select>
       </div>
 
-      <div className="mb-3">
-        <h6>Category</h6>
-        {getCategoryFilters().map((filter) => (
-          <div key={filter.id} className="form-check">
-            <input 
-              className="form-check-input"
-              type="checkbox" 
-              id={filter.id}
-              checked={selectedCategories.includes(filter.value)}
-              onChange={(e) => handleCategoryFilterChange(filter.value, e.target.checked)}
-            />
-            <label className="form-check-label" htmlFor={filter.id}>{filter.label}</label>
-          </div>
-        ))}
-      </div>
+      {/* Only show main category filters when on "all" products page */}
+      {(!category || category === "all") && (
+        <div className="mb-3">
+          <h6>Category</h6>
+          {getCategoryFilters().map((filter) => (
+            <div key={filter.id} className="form-check">
+              <input 
+                className="form-check-input"
+                type="checkbox" 
+                id={filter.id}
+                checked={selectedCategories.includes(filter.value)}
+                onChange={(e) => handleCategoryFilterChange(filter.value, e.target.checked)}
+              />
+              <label className="form-check-label" htmlFor={filter.id}>{filter.label}</label>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mb-3">
         <h6>Minimum Rating</h6>
