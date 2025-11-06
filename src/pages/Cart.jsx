@@ -4,11 +4,12 @@ import { toast } from 'react-toastify';
 import { useAppContext } from "../context/AppContext.jsx";
 
 const Cart = () => {
-  const { cart, products, removeFromCart, toggleWishlist, wishlist, user } = useAppContext();
+  const { cart, products, removeFromCart, toggleWishlist, wishlist, user, API_BASE, setCart } = useAppContext();
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [newAddress, setNewAddress] = useState("");
+  const [placingOrder, setPlacingOrder] = useState(false);
   const navigate = useNavigate();
   
   const addresses = JSON.parse(localStorage.getItem("addresses")) || [];
@@ -66,7 +67,7 @@ const Cart = () => {
     toast.success("Address added successfully!");
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!user) {
       toast.error("Please login to place an order!");
       navigate('/login');
@@ -83,10 +84,52 @@ const Cart = () => {
       setShowAddressModal(true);
       return;
     }
-    
-    toast.success("Order placed successfully! Thank you for your purchase!", {
-      autoClose: 5000,
-    });
+
+    setPlacingOrder(true);
+
+    try {
+      const orderData = {
+        userEmail: user.email,
+        items: cartItems.map(item => ({
+          productId: item.product._id,
+          quantity: quantities[item.id] || 1,
+          size: item.size || '',
+          price: item.product.price,
+          name: item.product.name,
+          image: item.product.image
+        })),
+        totalAmount: total,
+        deliveryAddress: selectedAddress
+      };
+
+      const response = await fetch(`${API_BASE}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (response.ok) {
+        // Clear cart after successful order
+        setCart([]);
+        localStorage.removeItem('cart');
+        
+        toast.success("Order placed successfully! Thank you for your purchase!", {
+          autoClose: 5000,
+        });
+        
+        // Navigate to profile page to see orders
+        navigate('/profile');
+      } else {
+        throw new Error('Failed to place order');
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setPlacingOrder(false);
+    }
   };
 
   const subtotal = cartItems.reduce((s, item) => s + item.product.price * (quantities[item.id] || 1), 0);
@@ -380,9 +423,16 @@ const Cart = () => {
                   <button 
                     className="btn btn-dark btn-lg w-100 py-3 fw-bold" 
                     onClick={handlePlaceOrder}
-                    disabled={!user || addresses.length === 0 || !selectedAddress}
+                    disabled={!user || addresses.length === 0 || !selectedAddress || placingOrder}
                   >
-                    🚀 Place Order - ${total.toFixed(2)}
+                    {placingOrder ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Placing Order...
+                      </>
+                    ) : (
+                      <>🚀 Place Order - ${total.toFixed(2)}</>
+                    )}
                   </button>
                   
                   <Link to="/products/all" className="btn btn-outline-primary w-100 mt-2">

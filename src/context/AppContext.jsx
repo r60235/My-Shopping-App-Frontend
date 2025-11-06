@@ -16,7 +16,7 @@ export const AppProvider = ({ children }) => {
     sort: "",
   });
 
-  const API_BASE = "https://my-shopping-app-frontend.vercel.app"; 
+  const API_BASE = "https://my-shopping-app-backend.vercel.app"; 
   const location = useLocation();
 
   // localStorage initialize
