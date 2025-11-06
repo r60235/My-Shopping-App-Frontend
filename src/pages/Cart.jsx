@@ -125,7 +125,7 @@ const Cart = () => {
                     
                     return (
                       <div key={item.id} className="cart-item border-bottom p-3">
-                        {/* Desktop View */}
+                        {/* desktop */}
                         <div className="d-none d-md-flex row align-items-center">
                           <div className="col-md-2">
                             <Link to={`/product/${item.product._id}`} className="text-decoration-none">
@@ -456,7 +456,7 @@ const Cart = () => {
         </div>
       )}
 
-      {/* Add Address Modal */}
+      {/* add address */}
       {showAddAddressModal && (
         <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
           <div className="modal-dialog modal-dialog-centered">

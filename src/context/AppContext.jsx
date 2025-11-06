@@ -11,7 +11,7 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [filters, setFilters] = useState({
     category: "",
-    price: 2000,
+    price: "any", 
     rating: "",
     sort: "",
   });
@@ -29,7 +29,13 @@ export const AppProvider = ({ children }) => {
     if (savedUser) setUser(JSON.parse(savedUser));
     if (savedCart) setCart(JSON.parse(savedCart));
     if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
-    if (savedFilters) setFilters(JSON.parse(savedFilters));
+    if (savedFilters) {
+      const parsedFilters = JSON.parse(savedFilters);
+      setFilters({
+        ...parsedFilters,
+        price: typeof parsedFilters.price === 'number' ? parsedFilters.price.toString() : parsedFilters.price
+      });
+    }
 
     // fetch all products 
     fetchProducts();
@@ -58,7 +64,7 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem("wishlist", JSON.stringify(wishlist));
   }, [wishlist]);
 
-  // fetct all
+  // fetch all
   const fetchProducts = async () => {
     try {
       const response = await fetch(`${API_BASE}/products`);
@@ -100,6 +106,10 @@ export const AppProvider = ({ children }) => {
     setWishlist(wishlist.filter(id => id !== productId));
   };
 
+  const updateFilters = (newFilters) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
   const value = {
     cart,
     wishlist,
@@ -109,7 +119,7 @@ export const AppProvider = ({ children }) => {
     user,
     setUser,
     filters,
-    setFilters,
+    setFilters: updateFilters,
     API_BASE,
     addToCart,
     removeFromCart,

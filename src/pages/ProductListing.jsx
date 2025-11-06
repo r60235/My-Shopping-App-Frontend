@@ -27,7 +27,7 @@ const ProductListing = () => {
         if (!nameMatch && !categoryMatch) return false;
       }
       
-      if (p.price > filters.price) return false;
+      if (filters.price !== "any" && p.price > parseInt(filters.price)) return false;
       
       if (filters.rating && (p.rating || 0) < filters.rating) return false;
       
@@ -87,13 +87,18 @@ const ProductListing = () => {
   };
 
   const handleClearAllFilters = () => {
-    setFilters({ category: "", price: 2000, rating: "", sort: "" });
+    setFilters({ category: "", price: "any", rating: "", sort: "" });
     setSelectedCategories([]);
   };
 
-  const handlePriceChange = (e) => {
-    setFilters({ ...filters, price: Number(e.target.value) });
-  };
+  const priceRanges = [
+    { value: "any", label: "Any Price" },
+    { value: "100", label: "Up to $100" },
+    { value: "250", label: "Up to $250" },
+    { value: "500", label: "Up to $500" },
+    { value: "1000", label: "Up to $1000" },
+    { value: "2000", label: "Up to $2000" }
+  ];
 
   if (products.length === 0) {
     return <p className="text-center mt-5">Loading products...</p>;
@@ -123,23 +128,20 @@ const ProductListing = () => {
         </div>
       )}
 
-      <div className="mb-3">
-        <label className="form-label">Max Price: ${filters.price}</label>
-        <input
-          type="range"
-          min="50"
-          max="2000"
-          step="50"
+      {/* REPLACED: Price Dropdown instead of Slider */}
+      <div className="mb-4">
+        <label className="form-label fw-bold">Price Range</label>
+        <select
+          className="form-select"
           value={filters.price}
-          className="form-range"
-          onChange={handlePriceChange}
-          onMouseDown={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-        />
-        <div className="d-flex justify-content-between">
-          <small>$50</small>
-          <small>$2000</small>
-        </div>
+          onChange={(e) => setFilters({ price: e.target.value })}
+        >
+          {priceRanges.map((range) => (
+            <option key={range.value} value={range.value}>
+              {range.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="mb-3">
@@ -167,7 +169,7 @@ const ProductListing = () => {
               type="radio"
               name="rating"
               id={`rating-${r}`}
-              onChange={() => setFilters({ ...filters, rating: r })}
+              onChange={() => setFilters({ rating: r })}
               checked={filters.rating === r}
             />
             <label className="form-check-label" htmlFor={`rating-${r}`}>{r}★ & above</label>
@@ -179,7 +181,7 @@ const ProductListing = () => {
             type="radio"
             name="rating"
             id="rating-all"
-            onChange={() => setFilters({ ...filters, rating: "" })}
+            onChange={() => setFilters({ rating: "" })}
             checked={filters.rating === ""}
           />
           <label className="form-check-label" htmlFor="rating-all">All Ratings</label>
@@ -194,7 +196,7 @@ const ProductListing = () => {
             type="radio"
             name="sort"
             id="sort-default"
-            onChange={() => setFilters({ ...filters, sort: "" })}
+            onChange={() => setFilters({ sort: "" })}
             checked={filters.sort === ""}
           />
           <label className="form-check-label" htmlFor="sort-default">Default</label>
@@ -205,7 +207,7 @@ const ProductListing = () => {
             type="radio"
             name="sort"
             id="sort-low"
-            onChange={() => setFilters({ ...filters, sort: "low" })}
+            onChange={() => setFilters({ sort: "low" })}
             checked={filters.sort === "low"}
           />
           <label className="form-check-label" htmlFor="sort-low">Price: Low → High</label>
@@ -216,7 +218,7 @@ const ProductListing = () => {
             type="radio"
             name="sort"
             id="sort-high"
-            onChange={() => setFilters({ ...filters, sort: "high" })}
+            onChange={() => setFilters({ sort: "high" })}
             checked={filters.sort === "high"}
           />
           <label className="form-check-label" htmlFor="sort-high">Price: High → Low</label>
@@ -245,7 +247,7 @@ const ProductListing = () => {
 
         {showFilters && (
           <div className="col-12 d-lg-none mb-3">
-            <div className="card p-3" style={{ position: 'static' }}>
+            <div className="card p-3">
               <FilterSection />
             </div>
           </div>
@@ -262,7 +264,9 @@ const ProductListing = () => {
               
               {filteredProducts.length > 0 && (
                 <div className="text-muted small text-center text-md-start">
-                  Showing {filteredProducts.length} products
+                  Price: {filters.price === "any" ? 'Any' : `Up to $${filters.price}`} | 
+                  Rating: {filters.rating ? `${filters.rating}★+` : 'Any'} |
+                  Sort: {filters.sort === 'low' ? 'Low to High' : filters.sort === 'high' ? 'High to Low' : 'Default'}
                 </div>
               )}
             </div>
