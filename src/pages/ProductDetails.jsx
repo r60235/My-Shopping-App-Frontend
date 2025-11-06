@@ -71,6 +71,28 @@ const ProductDetails = () => {
     }
   };
 
+  // Function to render star rating
+  const renderRating = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<span key={i} className="text-warning">★</span>);
+    }
+    
+    if (hasHalfStar) {
+      stars.push(<span key="half" className="text-warning">★</span>);
+    }
+    
+    const emptyStars = 5 - stars.length;
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(<span key={`empty-${i}`} className="text-muted">★</span>);
+    }
+    
+    return stars;
+  };
+
   if (loading) {
     return <div className="container mt-5 text-center">Loading product details...</div>;
   }
@@ -107,6 +129,20 @@ const ProductDetails = () => {
         
         <div className="col-12 col-md-6">
           <h3 className="h4 h-md-3">{product.name}</h3>
+          
+          {/* ADDED: Rating Display */}
+          <div className="mb-2">
+            <div className="d-flex align-items-center">
+              <div className="me-2">
+                {renderRating(product.rating || 0)}
+              </div>
+              <span className="text-muted">
+                ({product.rating || 0}/5)
+                {product.reviewCount && ` • ${product.reviewCount} reviews`}
+              </span>
+            </div>
+          </div>
+
           <div className="mb-3">
             <strong className="fs-4">${product.price?.toFixed(2)}</strong>
             {product.originalPrice && product.originalPrice > product.price && (
@@ -214,6 +250,12 @@ const ProductDetails = () => {
                     <div className="card-body">
                       <div className="fw-bold small text-truncate">{r.name}</div>
                       <div className="text-primary">${r.price?.toFixed(2)}</div>
+                      {/* ADDED: Rating in related products */}
+                      {r.rating && (
+                        <div className="small text-warning">
+                          {renderRating(r.rating)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
