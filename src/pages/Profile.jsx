@@ -9,11 +9,20 @@ const Profile = () => {
   const [newAddress, setNewAddress] = useState("");
 
   const handleAddAddress = () => {
-    if (!newAddress) return;
-    const updated = [...addresses, newAddress];
+    if (!newAddress.trim()) {
+      alert("Please enter an address");
+      return;
+    }
+    const updated = [...addresses, newAddress.trim()];
     setAddresses(updated);
     localStorage.setItem("addresses", JSON.stringify(updated));
     setNewAddress("");
+  };
+
+  const handleDeleteAddress = (indexToDelete) => {
+    const updated = addresses.filter((_, index) => index !== indexToDelete);
+    setAddresses(updated);
+    localStorage.setItem("addresses", JSON.stringify(updated));
   };
 
   const handleLogout = () => {
@@ -44,30 +53,44 @@ const Profile = () => {
           <strong>Phone:</strong> +91 9876543210
         </div>
 
-        <h5 className="mt-4">Addresses</h5>
+        <h5 className="mt-4 mb-3">Addresses</h5>
         {addresses.length > 0 ? (
-          <ul className="list-group mb-3">
+          <div className="mb-3">
             {addresses.map((addr, idx) => (
-              <li key={idx} className="list-group-item">
-                {addr}
-              </li>
+              <div key={idx} className="card mb-2">
+                <div className="card-body py-2">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span>{addr}</span>
+                    <button 
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => handleDeleteAddress(idx)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
           <p className="text-muted">No addresses added yet.</p>
         )}
 
-        <div className="input-group mb-3">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Add new address"
-            value={newAddress}
-            onChange={(e) => setNewAddress(e.target.value)}
-          />
-          <button className="btn btn-dark" onClick={handleAddAddress}>
-            Add
-          </button>
+        <div className="mb-3">
+          <label className="form-label fw-bold">Add New Address</label>
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Enter your complete address"
+              value={newAddress}
+              onChange={(e) => setNewAddress(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddAddress()}
+            />
+            <button className="btn btn-dark" onClick={handleAddAddress}>
+              Add Address
+            </button>
+          </div>
         </div>
 
         <button className="btn btn-danger w-100 mt-2" onClick={handleLogout}>

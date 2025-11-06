@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { useAppContext } from "../context/AppContext.jsx";
 
@@ -7,6 +7,9 @@ const Cart = () => {
   const { cart, products, removeFromCart, toggleWishlist, wishlist, user } = useAppContext();
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState("");
+  const navigate = useNavigate();
   
   const addresses = JSON.parse(localStorage.getItem("addresses")) || [];
   
@@ -49,19 +52,35 @@ const Cart = () => {
     }
   };
 
+  const handleAddNewAddress = () => {
+    if (!newAddress.trim()) {
+      toast.error("Please enter an address");
+      return;
+    }
+    
+    const updatedAddresses = [...addresses, newAddress.trim()];
+    localStorage.setItem("addresses", JSON.stringify(updatedAddresses));
+    setNewAddress("");
+    setShowAddAddressModal(false);
+    setSelectedAddress(newAddress.trim());
+    toast.success("Address added successfully!");
+  };
+
   const handlePlaceOrder = () => {
     if (!user) {
       toast.error("Please login to place an order!");
+      navigate('/login');
       return;
     }
     
     if (addresses.length === 0) {
-      toast.error("Please add an address to your profile first!");
+      setShowAddAddressModal(true);
       return;
     }
     
     if (!selectedAddress) {
       toast.error("Please select a delivery address!");
+      setShowAddressModal(true);
       return;
     }
     
@@ -320,10 +339,13 @@ const Cart = () => {
                     </div>
                   ) : addresses.length === 0 ? (
                     <div className="alert alert-warning mb-3">
-                      <small>No addresses found. Please add an address first.</small>
-                      <Link to="/profile" className="btn btn-warning w-100 mt-2">
-                        Add Address in Profile
-                      </Link>
+                      <small>No addresses found. Please add an address to continue.</small>
+                      <button 
+                        className="btn btn-warning w-100 mt-2"
+                        onClick={() => setShowAddAddressModal(true)}
+                      >
+                        Add Address
+                      </button>
                     </div>
                   ) : (
                     <div className="mb-3">
@@ -373,6 +395,7 @@ const Cart = () => {
         )}
       </div>
 
+      {/* Address Selection Modal */}
       {showAddressModal && (
         <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
           <div className="modal-dialog modal-dialog-centered">
@@ -399,14 +422,17 @@ const Cart = () => {
                     </div>
                   </div>
                 ))}
-                {addresses.length === 0 && (
-                  <div className="text-center py-3">
-                    <p className="text-muted">No addresses found</p>
-                    <Link to="/profile" className="btn btn-primary">
-                      Add Address in Profile
-                    </Link>
-                  </div>
-                )}
+                <div className="text-center mt-3">
+                  <button 
+                    className="btn btn-outline-primary"
+                    onClick={() => {
+                      setShowAddressModal(false);
+                      setShowAddAddressModal(true);
+                    }}
+                  >
+                    + Add New Address
+                  </button>
+                </div>
               </div>
               <div className="modal-footer">
                 <button 
@@ -423,6 +449,48 @@ const Cart = () => {
                   disabled={!selectedAddress}
                 >
                   Confirm Address
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Address Modal */}
+      {showAddAddressModal && (
+        <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Add New Address</h5>
+                <button type="button" className="btn-close" onClick={() => setShowAddAddressModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label">Enter your complete address</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    value={newAddress}
+                    onChange={(e) => setNewAddress(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowAddAddressModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary" 
+                  onClick={handleAddNewAddress}
+                  disabled={!newAddress.trim()}
+                >
+                  Save Address
                 </button>
               </div>
             </div>
