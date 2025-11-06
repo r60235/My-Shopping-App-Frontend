@@ -1,12 +1,13 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { AppContext } from "../context/AppContext";
+import { useAppContext } from "../context/AppContext";
 import ProductCard from "./ProductCard";
 
 const ProductListing = () => {
   const { category } = useParams();
-  const { products, filters, setFilters, searchQuery } = useContext(AppContext);
+  const { products, filters, setFilters, searchQuery } = useAppContext();
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     setSelectedCategories([]);
@@ -90,161 +91,191 @@ const ProductListing = () => {
     setSelectedCategories([]);
   };
 
+  const handlePriceChange = (e) => {
+    setFilters({ ...filters, price: Number(e.target.value) });
+  };
+
   if (products.length === 0) {
     return <p className="text-center mt-5">Loading products...</p>;
   }
 
+  const FilterSection = () => (
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5>Filters</h5>
+        <button
+          className="btn btn-sm btn-outline-secondary"
+          onClick={handleClearAllFilters}
+        >
+          Clear All
+        </button>
+      </div>
+
+      {searchQuery && (
+        <div className="alert alert-info mt-3">
+          <small>Search: "{searchQuery}"</small>
+          <button 
+            className="btn btn-sm btn-outline-secondary ms-2"
+            onClick={() => window.location.href = window.location.pathname}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      <div className="mb-3">
+        <label className="form-label">Max Price: ${filters.price}</label>
+        <input
+          type="range"
+          min="50"
+          max="2000"
+          step="50"
+          value={filters.price}
+          className="form-range"
+          onChange={handlePriceChange}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        />
+        <div className="d-flex justify-content-between">
+          <small>$50</small>
+          <small>$2000</small>
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <h6>Category</h6>
+        {getCategoryFilters().map((filter) => (
+          <div key={filter.id} className="form-check">
+            <input 
+              className="form-check-input"
+              type="checkbox" 
+              id={filter.id}
+              checked={selectedCategories.includes(filter.value)}
+              onChange={(e) => handleCategoryFilterChange(filter.value, e.target.checked)}
+            />
+            <label className="form-check-label" htmlFor={filter.id}>{filter.label}</label>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-3">
+        <h6>Minimum Rating</h6>
+        {[4, 3, 2, 1].map((r) => (
+          <div key={r} className="form-check">
+            <input
+              className="form-check-input"
+              type="radio"
+              name="rating"
+              id={`rating-${r}`}
+              onChange={() => setFilters({ ...filters, rating: r })}
+              checked={filters.rating === r}
+            />
+            <label className="form-check-label" htmlFor={`rating-${r}`}>{r}★ & above</label>
+          </div>
+        ))}
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="rating"
+            id="rating-all"
+            onChange={() => setFilters({ ...filters, rating: "" })}
+            checked={filters.rating === ""}
+          />
+          <label className="form-check-label" htmlFor="rating-all">All Ratings</label>
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <h6>Sort By</h6>
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="sort"
+            id="sort-default"
+            onChange={() => setFilters({ ...filters, sort: "" })}
+            checked={filters.sort === ""}
+          />
+          <label className="form-check-label" htmlFor="sort-default">Default</label>
+        </div>
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="sort"
+            id="sort-low"
+            onChange={() => setFilters({ ...filters, sort: "low" })}
+            checked={filters.sort === "low"}
+          />
+          <label className="form-check-label" htmlFor="sort-low">Price: Low → High</label>
+        </div>
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="radio"
+            name="sort"
+            id="sort-high"
+            onChange={() => setFilters({ ...filters, sort: "high" })}
+            checked={filters.sort === "high"}
+          />
+          <label className="form-check-label" htmlFor="sort-high">Price: High → Low</label>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="container-fluid mt-3">
       <div className="row">
-        <div className="col-md-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <h5>Filters</h5>
-            <button
-              className="btn btn-sm btn-outline-secondary"
-              onClick={handleClearAllFilters}
-            >
-              Clear All
-            </button>
-          </div>
-
-          {searchQuery && (
-            <div className="alert alert-info mt-3">
-              <small>Search: "{searchQuery}"</small>
-              <button 
-                className="btn btn-sm btn-outline-secondary ms-2"
-                onClick={() => window.location.href = window.location.pathname}
-              >
-                Clear
-              </button>
-            </div>
-          )}
-
-          <div className="mt-3">
-            <label className="form-label">Max Price: ${filters.price}</label>
-            <input
-              type="range"
-              min="50"
-              max="2000"
-              step="50"
-              value={filters.price}
-              className="form-range"
-              onChange={(e) =>
-                setFilters({ ...filters, price: Number(e.target.value) })
-              }
-            />
-            <div className="d-flex justify-content-between">
-              <small>$50</small>
-              <small>$2000</small>
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <h6>Category</h6>
-            {getCategoryFilters().map((filter) => (
-              <div key={filter.id}>
-                <input 
-                  type="checkbox" 
-                  id={filter.id}
-                  checked={selectedCategories.includes(filter.value)}
-                  onChange={(e) => handleCategoryFilterChange(filter.value, e.target.checked)}
-                />
-                <label htmlFor={filter.id} className="ms-2">{filter.label}</label>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-3">
-            <h6>Minimum Rating</h6>
-            {[4, 3, 2, 1].map((r) => (
-              <div key={r}>
-                <input
-                  type="radio"
-                  name="rating"
-                  id={`rating-${r}`}
-                  onChange={() => setFilters({ ...filters, rating: r })}
-                  checked={filters.rating === r}
-                />{" "}
-                <label htmlFor={`rating-${r}`}>{r}★ & above</label>
-              </div>
-            ))}
-            <div>
-              <input
-                type="radio"
-                name="rating"
-                id="rating-all"
-                onChange={() => setFilters({ ...filters, rating: "" })}
-                checked={filters.rating === ""}
-              />{" "}
-              <label htmlFor="rating-all">All Ratings</label>
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <h6>Sort By</h6>
-            <div>
-              <input
-                type="radio"
-                name="sort"
-                id="sort-default"
-                onChange={() => setFilters({ ...filters, sort: "" })}
-                checked={filters.sort === ""}
-              />{" "}
-              <label htmlFor="sort-default">Default</label>
-            </div>
-            <div>
-              <input
-                type="radio"
-                name="sort"
-                id="sort-low"
-                onChange={() => setFilters({ ...filters, sort: "low" })}
-                checked={filters.sort === "low"}
-              />{" "}
-              <label htmlFor="sort-low">Price: Low → High</label>
-            </div>
-            <div>
-              <input
-                type="radio"
-                name="sort"
-                id="sort-high"
-                onChange={() => setFilters({ ...filters, sort: "high" })}
-                checked={filters.sort === "high"}
-              />{" "}
-              <label htmlFor="sort-high">Price: High → Low</label>
-            </div>
+        <div className="col-lg-3 d-none d-lg-block">
+          <div className="sticky-top" style={{top: '20px'}}>
+            <FilterSection />
           </div>
         </div>
 
-        <div className="col-md-9">
-          <div className="bg-light p-4 rounded">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="mb-0">
+        <div className="col-12 d-lg-none mb-3">
+          <button 
+            className="btn btn-outline-primary w-100"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
+        </div>
+
+        {showFilters && (
+          <div className="col-12 d-lg-none mb-3">
+            <div className="card p-3" style={{ position: 'static' }}>
+              <FilterSection />
+            </div>
+          </div>
+        )}
+
+        <div className="col-lg-9">
+          <div className="bg-light p-3 p-md-4 rounded">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+              <h5 className="mb-2 mb-md-0">
                 {category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Products` : 'All Products'} 
                 {searchQuery && ` matching "${searchQuery}"`}
                 <span className="text-muted"> ({filteredProducts.length})</span>
               </h5>
               
               {filteredProducts.length > 0 && (
-                <div className="text-muted small">
-                  Price: ${filters.price === 2000 ? 'Any' : `Up to $${filters.price}`} | 
-                  Rating: {filters.rating ? `${filters.rating}★+` : 'Any'} |
-                  Sort: {filters.sort === 'low' ? 'Low to High' : filters.sort === 'high' ? 'High to Low' : 'Default'}
+                <div className="text-muted small text-center text-md-start">
+                  Showing {filteredProducts.length} products
                 </div>
               )}
             </div>
 
-            <div className="d-flex flex-wrap gap-4 justify-content-start">
+            <div className="row g-3">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((p) => (
-                  <div
-                    key={p._id}
-                    style={{ flex: "1 1 200px", maxWidth: "220px" }}
-                  >
+                  <div key={p._id} className="col-6 col-md-4 col-lg-3">
                     <ProductCard product={p} />
                   </div>
                 ))
               ) : (
-                <div className="text-center w-100 py-5">
+                <div className="col-12 text-center py-5">
                   <p className="text-muted">No products found with current filters.</p>
                   <button 
                     className="btn btn-primary btn-sm"

@@ -9,12 +9,12 @@ import Wishlist from "./pages/Wishlist.jsx";
 import Cart from "./pages/Cart.jsx";
 import Login from "./pages/Login.jsx";
 import Profile from "./pages/Profile.jsx";
-import { AppProvider } from "./context/AppContext.jsx";
 import { ToastContainer } from 'react-toastify';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 const App = () => {
   return (
-    <AppProvider>
+    <>
       <Header />
       <ToastContainer position="bottom-right" autoClose={3000} />
       <main style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -30,9 +30,8 @@ const App = () => {
           </Routes>
         </div>
       </main>
-
       <Footer />
-    </AppProvider>
+    </>
   );
 };
 
