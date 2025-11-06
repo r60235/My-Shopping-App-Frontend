@@ -21,7 +21,9 @@ const Profile = () => {
       const response = await fetch(`${API_BASE}/orders/${user.email}`);
       if (response.ok) {
         const data = await response.json();
-        setOrders(data.orders || []);
+        // Get last 6 orders (most recent first)
+        const sortedOrders = (data.orders || []).sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+        setOrders(sortedOrders.slice(0, 6));
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -124,109 +126,79 @@ const Profile = () => {
         </div>
 
         <div className="col-md-7">
-          <div className="card p-4 shadow-sm h-100">
-            <h4 className="mb-3 text-center">Your Orders</h4>
+          <div className="card p-3 shadow-sm h-100">
+            <h4 className="mb-3 text-center">Recent Orders</h4>
             
             {loading ? (
-              <div className="text-center py-4">
-                <div className="spinner-border text-primary" role="status">
+              <div className="text-center py-3">
+                <div className="spinner-border spinner-border-sm text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
-                <p className="mt-2 text-muted">Loading your orders...</p>
+                <p className="mt-2 text-muted small">Loading orders...</p>
               </div>
             ) : orders.length === 0 ? (
-              <div className="text-center py-5">
-                <div className="mb-3" style={{fontSize: '4rem'}}>📦</div>
-                <h5 className="text-muted mb-2">No orders yet</h5>
-                <p className="text-muted">Your orders will appear here after you make a purchase.</p>
+              <div className="text-center py-4">
+                <div className="mb-2" style={{fontSize: '2.5rem'}}>📦</div>
+                <h6 className="text-muted mb-1">No orders yet</h6>
+                <p className="text-muted small">Your recent orders will appear here</p>
               </div>
             ) : (
-              <div className="orders-list" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              <div className="orders-list">
                 {orders.map((order) => (
-                  <div key={order._id} className="card mb-4 border-0 shadow-sm">
-                    <div className="card-header bg-light py-3">
-                      <div className="row align-items-center">
-                        <div className="col-md-6">
-                          <div className="d-flex align-items-center">
-                            <div className="bg-primary rounded p-2 me-3">
-                              <span className="text-white fw-bold">ORDER</span>
-                            </div>
-                            <div>
-                              <h6 className="mb-1 fw-bold">#{order._id.slice(-8).toUpperCase()}</h6>
-                              <small className="text-muted">
-                                {new Date(order.orderDate).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </small>
-                            </div>
-                          </div>
+                  <div key={order._id} className="card mb-3 border">
+                    <div className="card-body p-3">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                          <h6 className="mb-1 fw-bold">Order #{order._id.slice(-6)}</h6>
+                          <small className="text-muted">
+                            {new Date(order.orderDate).toLocaleDateString()}
+                          </small>
                         </div>
-                        <div className="col-md-6 text-md-end mt-2 mt-md-0">
-                          <span className={`badge fs-6 ${
+                        <div className="text-end">
+                          <span className={`badge ${
                             order.status === 'Placed' ? 'bg-primary' : 
                             order.status === 'Shipped' ? 'bg-warning' : 
                             order.status === 'Delivered' ? 'bg-success' : 'bg-secondary'
                           }`}>
                             {order.status}
                           </span>
-                          <div className="mt-1">
-                            <strong className="text-primary fs-5">${order.totalAmount.toFixed(2)}</strong>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="card-body">
-                      <div className="row">
-                        <div className="col-md-6 mb-3">
-                          <h6 className="fw-bold mb-2">📦 Delivery Information</h6>
-                          <p className="mb-1 small text-muted">{order.deliveryAddress}</p>
-                        </div>
-                        <div className="col-md-6 mb-3">
-                          <h6 className="fw-bold mb-2">📊 Order Summary</h6>
-                          <div className="d-flex justify-content-between small">
-                            <span>Items:</span>
-                            <span>{order.items.length}</span>
-                          </div>
-                          <div className="d-flex justify-content-between small">
-                            <span>Total Amount:</span>
-                            <span className="fw-bold">${order.totalAmount.toFixed(2)}</span>
-                          </div>
+                          <div className="fw-bold text-primary mt-1">${order.totalAmount.toFixed(2)}</div>
                         </div>
                       </div>
 
-                      <h6 className="fw-bold mb-3">🛍️ Order Items</h6>
+                      <div className="small text-muted mb-2">
+                        {order.items.length} item{order.items.length !== 1 ? 's' : ''} • 
+                        Delivery: {order.deliveryAddress.substring(0, 25)}...
+                      </div>
+
                       <div className="order-items">
-                        {order.items.map((item, index) => (
-                          <div key={index} className="d-flex align-items-center border-bottom pb-3 mb-3">
+                        {order.items.slice(0, 2).map((item, index) => (
+                          <div key={index} className="d-flex align-items-center mb-1">
                             <img 
                               src={item.image} 
                               alt={item.name}
-                              className="rounded me-3 flex-shrink-0"
+                              className="rounded me-2"
                               style={{ 
-                                width: '60px', 
-                                height: '60px', 
-                                objectFit: 'cover',
-                                border: '1px solid #dee2e6'
+                                width: '30px', 
+                                height: '30px', 
+                                objectFit: 'cover'
                               }}
                             />
                             <div className="flex-grow-1">
-                              <div className="fw-bold small mb-1">{item.name}</div>
-                              <div className="d-flex flex-wrap gap-3 small text-muted">
-                                <span>Qty: {item.quantity}</span>
-                                {item.size && <span>Size: {item.size}</span>}
-                                <span>Price: ${item.price.toFixed(2)}</span>
-                                <span className="fw-bold text-dark">
-                                  Total: ${(item.price * item.quantity).toFixed(2)}
-                                </span>
+                              <div className="small text-truncate" style={{maxWidth: '150px'}}>
+                                {item.name}
+                              </div>
+                              <div className="small text-muted">
+                                Qty: {item.quantity} {item.size && `• Size: ${item.size}`}
                               </div>
                             </div>
                           </div>
                         ))}
+                        {order.items.length > 2 && (
+                          <div className="small text-muted text-center mt-1">
+                            +{order.items.length - 2} more items
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
