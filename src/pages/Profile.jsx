@@ -63,7 +63,7 @@ const Profile = () => {
   return (
     <div className="container mt-4">
       <div className="row">
-        <div className="col-md-6">
+        <div className="col-md-5">
           <div className="card p-4 shadow-sm mb-4">
             <h4 className="mb-3 text-center">User Profile</h4>
 
@@ -84,7 +84,7 @@ const Profile = () => {
                   <div key={idx} className="card mb-2">
                     <div className="card-body py-2">
                       <div className="d-flex justify-content-between align-items-center">
-                        <span>{addr}</span>
+                        <span className="small">{addr}</span>
                         <button 
                           className="btn btn-outline-danger btn-sm"
                           onClick={() => handleDeleteAddress(idx)}
@@ -123,62 +123,106 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="col-md-6">
-          <div className="card p-4 shadow-sm">
+        <div className="col-md-7">
+          <div className="card p-4 shadow-sm h-100">
             <h4 className="mb-3 text-center">Your Orders</h4>
             
             {loading ? (
-              <div className="text-center">
-                <div className="spinner-border" role="status">
+              <div className="text-center py-4">
+                <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
+                <p className="mt-2 text-muted">Loading your orders...</p>
               </div>
             ) : orders.length === 0 ? (
-              <div className="text-center py-4">
-                <div className="mb-3" style={{fontSize: '3rem'}}>📦</div>
-                <h5 className="text-muted">No orders yet</h5>
+              <div className="text-center py-5">
+                <div className="mb-3" style={{fontSize: '4rem'}}>📦</div>
+                <h5 className="text-muted mb-2">No orders yet</h5>
                 <p className="text-muted">Your orders will appear here after you make a purchase.</p>
               </div>
             ) : (
-              <div className="orders-list">
+              <div className="orders-list" style={{ maxHeight: '600px', overflowY: 'auto' }}>
                 {orders.map((order) => (
-                  <div key={order._id} className="card mb-3">
-                    <div className="card-header bg-light">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <strong>Order #{order._id.slice(-6)}</strong>
-                        <span className={`badge ${
-                          order.status === 'Placed' ? 'bg-primary' : 
-                          order.status === 'Shipped' ? 'bg-warning' : 
-                          order.status === 'Delivered' ? 'bg-success' : 'bg-secondary'
-                        }`}>
-                          {order.status}
-                        </span>
+                  <div key={order._id} className="card mb-4 border-0 shadow-sm">
+                    <div className="card-header bg-light py-3">
+                      <div className="row align-items-center">
+                        <div className="col-md-6">
+                          <div className="d-flex align-items-center">
+                            <div className="bg-primary rounded p-2 me-3">
+                              <span className="text-white fw-bold">ORDER</span>
+                            </div>
+                            <div>
+                              <h6 className="mb-1 fw-bold">#{order._id.slice(-8).toUpperCase()}</h6>
+                              <small className="text-muted">
+                                {new Date(order.orderDate).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </small>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="col-md-6 text-md-end mt-2 mt-md-0">
+                          <span className={`badge fs-6 ${
+                            order.status === 'Placed' ? 'bg-primary' : 
+                            order.status === 'Shipped' ? 'bg-warning' : 
+                            order.status === 'Delivered' ? 'bg-success' : 'bg-secondary'
+                          }`}>
+                            {order.status}
+                          </span>
+                          <div className="mt-1">
+                            <strong className="text-primary fs-5">${order.totalAmount.toFixed(2)}</strong>
+                          </div>
+                        </div>
                       </div>
-                      <small className="text-muted">
-                        {new Date(order.orderDate).toLocaleDateString()} • ${order.totalAmount.toFixed(2)}
-                      </small>
                     </div>
+                    
                     <div className="card-body">
-                      <div className="mb-2">
-                        <strong>Delivery Address:</strong>
-                        <p className="mb-1 small">{order.deliveryAddress}</p>
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <h6 className="fw-bold mb-2">📦 Delivery Information</h6>
+                          <p className="mb-1 small text-muted">{order.deliveryAddress}</p>
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <h6 className="fw-bold mb-2">📊 Order Summary</h6>
+                          <div className="d-flex justify-content-between small">
+                            <span>Items:</span>
+                            <span>{order.items.length}</span>
+                          </div>
+                          <div className="d-flex justify-content-between small">
+                            <span>Total Amount:</span>
+                            <span className="fw-bold">${order.totalAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <strong>Items:</strong>
+
+                      <h6 className="fw-bold mb-3">🛍️ Order Items</h6>
+                      <div className="order-items">
                         {order.items.map((item, index) => (
-                          <div key={index} className="d-flex align-items-center mt-2">
+                          <div key={index} className="d-flex align-items-center border-bottom pb-3 mb-3">
                             <img 
                               src={item.image} 
                               alt={item.name}
-                              className="rounded me-2"
-                              style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                              className="rounded me-3 flex-shrink-0"
+                              style={{ 
+                                width: '60px', 
+                                height: '60px', 
+                                objectFit: 'cover',
+                                border: '1px solid #dee2e6'
+                              }}
                             />
                             <div className="flex-grow-1">
-                              <div className="small">{item.name}</div>
-                              <div className="small text-muted">
-                                Qty: {item.quantity} 
-                                {item.size && ` • Size: ${item.size}`}
-                                • ${item.price.toFixed(2)} each
+                              <div className="fw-bold small mb-1">{item.name}</div>
+                              <div className="d-flex flex-wrap gap-3 small text-muted">
+                                <span>Qty: {item.quantity}</span>
+                                {item.size && <span>Size: {item.size}</span>}
+                                <span>Price: ${item.price.toFixed(2)}</span>
+                                <span className="fw-bold text-dark">
+                                  Total: ${(item.price * item.quantity).toFixed(2)}
+                                </span>
                               </div>
                             </div>
                           </div>
