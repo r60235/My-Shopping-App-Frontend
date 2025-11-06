@@ -13,6 +13,28 @@ const ProductCard = ({ product }) => {
   const cartItemsForProduct = cart.filter(item => item.productId === product._id);
   const inCart = cartItemsForProduct.length > 0;
 
+  // Function to render star rating
+  const renderRating = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<span key={i} className="text-warning">★</span>);
+    }
+    
+    if (hasHalfStar) {
+      stars.push(<span key="half" className="text-warning">★</span>);
+    }
+    
+    const emptyStars = 5 - stars.length;
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(<span key={`empty-${i}`} className="text-muted">★</span>);
+    }
+    
+    return stars;
+  };
+
   const handleAddToCart = () => {
     if (isClothing) {
       setShowSizeModal(true);
@@ -57,6 +79,18 @@ const ProductCard = ({ product }) => {
           <Link to={`/product/${product._id}`} className="text-decoration-none text-dark">
             <h6 className="card-title mb-2 text-truncate" style={{ cursor: 'pointer' }} title={product.name}>{product.name}</h6>
           </Link>
+
+          {/* ADDED: Rating Display */}
+          <div className="mb-2">
+            <div className="d-flex align-items-center justify-content-center">
+              <div className="me-1" style={{ fontSize: '0.8rem' }}>
+                {renderRating(product.rating || 0)}
+              </div>
+              <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                ({product.rating || 0})
+              </small>
+            </div>
+          </div>
 
           <div className="fw-bold mb-2">${product.price?.toFixed(2)}</div>
           <div className="text-muted small text-capitalize mb-2 text-truncate">{product.category}</div>
