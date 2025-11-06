@@ -4,7 +4,7 @@ import { useAppContext } from "../context/AppContext.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Header = () => {
-  const { cart, wishlist, searchQuery, setSearchQuery, user, setUser } = useAppContext();
+  const { cart, wishlist, searchQuery, setSearchQuery, user, setUser, getTotalCartItems } = useAppContext();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -61,7 +61,7 @@ const Header = () => {
         <Link to="/cart" className="btn btn-outline-light btn-sm me-2 position-relative text-decoration-none">
           🛒
           <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{ fontSize: "0.6rem" }}>
-            {cart.length}
+            {getTotalCartItems()} 
           </span>
         </Link>
 

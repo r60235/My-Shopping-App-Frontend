@@ -16,7 +16,7 @@ export const AppProvider = ({ children }) => {
     sort: "",
   });
 
-  const API_BASE = "https://my-shopping-app-backend.vercel.app";
+  const API_BASE = "https://my-shopping-app-frontend.vercel.app"; 
   const location = useLocation();
 
   // localStorage initialize
@@ -79,17 +79,47 @@ export const AppProvider = ({ children }) => {
 
   // add to cart with size
   const addToCart = (productId, size = "") => {
-    const cartItem = {
-      productId: productId,
-      size: size,
-      id: `${productId}-${size || "nosize"}` // unique ID for cart item
-    };
-    
-    setCart(prevCart => [...prevCart, cartItem]);
+    setCart(prevCart => {
+      const existingItemIndex = prevCart.findIndex(item => 
+        item.productId === productId && item.size === size
+      );
+      
+      if (existingItemIndex > -1) {
+        // If item already exists, update quantity
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: (updatedCart[existingItemIndex].quantity || 1) + 1
+        };
+        return updatedCart;
+      } else {
+        // Add new item with quantity 1
+        const cartItem = {
+          productId: productId,
+          size: size,
+          id: `${productId}-${size || "nosize"}`,
+          quantity: 1
+        };
+        return [...prevCart, cartItem];
+      }
+    });
   };
 
   const removeFromCart = (cartItemId) => {
-    setCart(cart.filter(item => item.id !== cartItemId));
+    setCart(prevCart => prevCart.filter(item => item.id !== cartItemId));
+  };
+
+  const updateCartQuantity = (cartItemId, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(cartItemId);
+      return;
+    }
+    
+    setCart(prevCart => 
+      prevCart.map(item => 
+        item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
   };
 
   // wishlist
@@ -110,6 +140,11 @@ export const AppProvider = ({ children }) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
+  // Calculate total items in cart (sum of all quantities)
+  const getTotalCartItems = () => {
+    return cart.reduce((total, item) => total + (item.quantity || 1), 0);
+  };
+
   const value = {
     cart,
     wishlist,
@@ -123,9 +158,11 @@ export const AppProvider = ({ children }) => {
     API_BASE,
     addToCart,
     removeFromCart,
+    updateCartQuantity,
     toggleWishlist,
     moveWishlistToCart,
     fetchProducts,
+    getTotalCartItems, 
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
