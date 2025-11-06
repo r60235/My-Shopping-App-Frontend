@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useAppContext } from "../context/AppContext.jsx";
 
 const Cart = () => {
-  const { cart, products, removeFromCart, toggleWishlist, wishlist, user, API_BASE, setCart } = useAppContext();
+  const { cart, products, removeFromCart, toggleWishlist, wishlist, user, API_BASE } = useAppContext();
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
@@ -111,9 +111,11 @@ const Cart = () => {
       });
 
       if (response.ok) {
-        // Clear cart after successful order
-        setCart([]);
-        localStorage.removeItem('cart');
+        // Clear cart by removing each item individually
+        const cartCopy = [...cart];
+        cartCopy.forEach(item => {
+          removeFromCart(item.id);
+        });
         
         toast.success("Order placed successfully! Thank you for your purchase!", {
           autoClose: 5000,
