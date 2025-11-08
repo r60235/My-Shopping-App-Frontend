@@ -1,11 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext.jsx";
 
 const Wishlist = () => {
-  const { wishlist, products, moveWishlistToCart, toggleWishlist } = useAppContext();
+  const { wishlist, products, moveWishlistToCart, toggleWishlist, addToCart } = useAppContext();
+  const [showSizeModal, setShowSizeModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedSize, setSelectedSize] = useState("");
   
-  const items = products.filter((p) => wishlist.includes(p._id));
+  const items = products.filter((p) => p && p._id && wishlist.includes(p._id));
+
+  const handleMoveToCart = (product) => {
+    if (product.category !== "electronics") {
+      setSelectedProduct(product);
+      setSelectedSize("");
+      setShowSizeModal(true);
+    } else {
+      moveWishlistToCart(product._id);
+    }
+  };
+
+  const handleConfirmMoveToCart = () => {
+    if (selectedProduct) {
+      if (selectedProduct.category !== "electronics" && !selectedSize) {
+        return;
+      }
+      
+      addToCart(selectedProduct._id, selectedSize);
+      toggleWishlist(selectedProduct._id);
+      setShowSizeModal(false);
+      setSelectedProduct(null);
+      setSelectedSize("");
+    }
+  };
 
   return (
     <div className="container mt-4">
@@ -64,7 +91,7 @@ const Wishlist = () => {
                   <div className="d-flex gap-2 mt-auto">
                     <button
                       className="btn btn-primary flex-fill btn-sm"
-                      onClick={() => moveWishlistToCart(p._id)}
+                      onClick={() => handleMoveToCart(p)}
                     >
                       Add to Cart
                     </button>
@@ -80,6 +107,53 @@ const Wishlist = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Size Selection Modal */}
+      {showSizeModal && selectedProduct && (
+        <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Select Size</h5>
+                <button type="button" className="btn-close" onClick={() => setShowSizeModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Choose size for {selectedProduct.name}</label>
+                  <div className="d-flex gap-2 flex-wrap">
+                    {["S", "M", "L", "XL"].map((size) => (
+                      <button
+                        key={size}
+                        className={`btn ${selectedSize === size ? 'btn-primary' : 'btn-outline-primary'}`}
+                        onClick={() => setSelectedSize(size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowSizeModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary" 
+                  onClick={handleConfirmMoveToCart}
+                  disabled={!selectedSize}
+                >
+                  Move to Cart
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

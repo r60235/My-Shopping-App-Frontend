@@ -80,7 +80,7 @@ const ProductCard = ({ product }) => {
             <h6 className="card-title mb-2 text-truncate" style={{ cursor: 'pointer' }} title={product.name}>{product.name}</h6>
           </Link>
 
-          {/* ADDED: Rating Display */}
+          {/* rating Display */}
           <div className="mb-2">
             <div className="d-flex align-items-center justify-content-center">
               <div className="me-1" style={{ fontSize: '0.8rem' }}>

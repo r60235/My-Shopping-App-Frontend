@@ -19,29 +19,71 @@ export const AppProvider = ({ children }) => {
   const API_BASE = "https://my-shopping-app-backend.vercel.app";
   const location = useLocation();
 
-  // localStorage initialize
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    const savedCart = localStorage.getItem("cart");
-    const savedWishlist = localStorage.getItem("wishlist");
-    const savedFilters = localStorage.getItem("filters");
-    
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (savedCart) setCart(JSON.parse(savedCart));
-    if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
-    if (savedFilters) {
-      const parsedFilters = JSON.parse(savedFilters);
-      setFilters({
-        ...parsedFilters,
-        price: typeof parsedFilters.price === 'number' ? parsedFilters.price.toString() : parsedFilters.price
-      });
-    }
+    const loadFromStorage = () => {
+      const savedUser = localStorage.getItem("user");
+      const savedCart = localStorage.getItem("cart");
+      const savedWishlist = localStorage.getItem("wishlist");
+      const savedFilters = localStorage.getItem("filters");
+      
+      if (savedUser) setUser(JSON.parse(savedUser));
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          setCart(Array.isArray(parsedCart) ? parsedCart : []);
+        } catch (error) {
+          setCart([]);
+          localStorage.removeItem("cart");
+        }
+      } else {
+        setCart([]);
+      }
+      if (savedWishlist) {
+        try {
+          const parsedWishlist = JSON.parse(savedWishlist);
+          setWishlist(Array.isArray(parsedWishlist) ? parsedWishlist : []);
+        } catch (error) {
+          setWishlist([]);
+          localStorage.removeItem("wishlist");
+        }
+      } else {
+        setWishlist([]);
+      }
+      if (savedFilters) {
+        const parsedFilters = JSON.parse(savedFilters);
+        setFilters({
+          ...parsedFilters,
+          price: typeof parsedFilters.price === 'number' ? parsedFilters.price.toString() : parsedFilters.price
+        });
+      }
+    };
 
-    // fetch all products 
+    loadFromStorage();
     fetchProducts();
+
+    const handleStorageChange = (e) => {
+      if (e.key === "cart") {
+        try {
+          const newCart = e.newValue ? JSON.parse(e.newValue) : [];
+          setCart(Array.isArray(newCart) ? newCart : []);
+        } catch (error) {
+          setCart([]);
+        }
+      }
+      if (e.key === "wishlist") {
+        try {
+          const newWishlist = e.newValue ? JSON.parse(e.newValue) : [];
+          setWishlist(Array.isArray(newWishlist) ? newWishlist : []);
+        } catch (error) {
+          setWishlist([]);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // search
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const searchParam = urlParams.get('search');
@@ -50,12 +92,10 @@ export const AppProvider = ({ children }) => {
     }
   }, [location.search]);
 
-  // save filters
   useEffect(() => {
     localStorage.setItem("filters", JSON.stringify(filters));
   }, [filters]);
 
-  // save cart, wishlist when they change
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
@@ -64,7 +104,6 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem("wishlist", JSON.stringify(wishlist));
   }, [wishlist]);
 
-  // fetch all
   const fetchProducts = async () => {
     try {
       const response = await fetch(`${API_BASE}/products`);
@@ -77,7 +116,6 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // add to cart with size
   const addToCart = (productId, size = "") => {
     setCart(prevCart => {
       const existingItemIndex = prevCart.findIndex(item => 
@@ -85,7 +123,6 @@ export const AppProvider = ({ children }) => {
       );
       
       if (existingItemIndex > -1) {
-        // If item already exists, update quantity
         const updatedCart = [...prevCart];
         updatedCart[existingItemIndex] = {
           ...updatedCart[existingItemIndex],
@@ -93,7 +130,6 @@ export const AppProvider = ({ children }) => {
         };
         return updatedCart;
       } else {
-        // Add new item with quantity 1
         const cartItem = {
           productId: productId,
           size: size,
@@ -122,25 +158,24 @@ export const AppProvider = ({ children }) => {
     );
   };
 
-  // wishlist
   const toggleWishlist = (productId) => {
-    if (wishlist.includes(productId)) {
-      setWishlist(wishlist.filter(id => id !== productId));
-    } else {
-      setWishlist([...wishlist, productId]);
-    }
+    setWishlist(prevWishlist => {
+      const newWishlist = prevWishlist.includes(productId) 
+        ? prevWishlist.filter(id => id !== productId)
+        : [...prevWishlist, productId];
+      return newWishlist;
+    });
   };
 
   const moveWishlistToCart = (productId) => {
     addToCart(productId);
-    setWishlist(wishlist.filter(id => id !== productId));
+    setWishlist(prev => prev.filter(id => id !== productId));
   };
 
   const updateFilters = (newFilters) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
-  // Calculate total items in cart (sum of all quantities)
   const getTotalCartItems = () => {
     return cart.reduce((total, item) => total + (item.quantity || 1), 0);
   };

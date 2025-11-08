@@ -4,7 +4,7 @@ import { useAppContext } from "../context/AppContext.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const Header = () => {
-  const { cart, wishlist, searchQuery, setSearchQuery, user, setUser, getTotalCartItems } = useAppContext();
+  const { cart, wishlist, products, searchQuery, setSearchQuery, user, setUser, getTotalCartItems } = useAppContext();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -23,6 +23,11 @@ const Header = () => {
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
+
+  // Calculate wishlist count the same way as Wishlist component
+  const wishlistItems = products.filter((p) => p && p._id && wishlist.includes(p._id));
+  const wishlistCount = wishlistItems.length;
+  const cartCount = getTotalCartItems();
 
   return (
     <nav className="navbar navbar-dark bg-dark px-2 px-md-3">
@@ -54,14 +59,14 @@ const Header = () => {
         <Link to="/wishlist" className="btn btn-outline-light btn-sm me-2 position-relative text-decoration-none">
           ❤️
           <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: "0.6rem" }}>
-            {wishlist.length}
+            {wishlistCount}
           </span>
         </Link>
 
         <Link to="/cart" className="btn btn-outline-light btn-sm me-2 position-relative text-decoration-none">
           🛒
           <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" style={{ fontSize: "0.6rem" }}>
-            {getTotalCartItems()} 
+            {cartCount}
           </span>
         </Link>
 
