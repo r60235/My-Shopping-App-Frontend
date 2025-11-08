@@ -88,7 +88,8 @@ const Wishlist = () => {
                   <div className="fw-bold mb-2">${p.price.toFixed(2)}</div>
                   <div className="text-muted small text-capitalize mb-3">{p.category}</div>
 
-                  <div className="d-flex gap-2 mt-auto">
+                  {/* <- ONLY CHANGE: make buttons stack on xs and row on sm+ */}
+                  <div className="d-flex flex-column flex-sm-row gap-2 mt-auto">
                     <button
                       className="btn btn-primary flex-fill btn-sm"
                       onClick={() => handleMoveToCart(p)}
