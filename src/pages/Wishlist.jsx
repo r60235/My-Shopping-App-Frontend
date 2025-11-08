@@ -7,7 +7,7 @@ const Wishlist = () => {
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSize, setSelectedSize] = useState("");
-  
+
   const items = products.filter((p) => p && p._id && wishlist.includes(p._id));
 
   const handleMoveToCart = (product) => {
@@ -25,7 +25,7 @@ const Wishlist = () => {
       if (selectedProduct.category !== "electronics" && !selectedSize) {
         return;
       }
-      
+
       addToCart(selectedProduct._id, selectedSize);
       toggleWishlist(selectedProduct._id);
       setShowSizeModal(false);
@@ -36,14 +36,14 @@ const Wishlist = () => {
 
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="mb-0">Your Wishlist ❤️</h3>
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h3 className="mb-2 mb-md-0">Your Wishlist ❤️</h3>
         <span className="badge bg-danger fs-6">{items.length} items</span>
       </div>
 
       {items.length === 0 ? (
         <div className="text-center mt-5 py-5">
-          <div className="mb-4" style={{fontSize: '4rem'}}>❤️</div>
+          <div className="mb-4" style={{ fontSize: "4rem" }}>❤️</div>
           <h4 className="text-muted mb-3">Your wishlist is empty</h4>
           <p className="text-muted mb-4">Start adding products you love to your wishlist!</p>
           <Link to="/products/all" className="btn btn-primary btn-lg">
@@ -61,14 +61,14 @@ const Wishlist = () => {
                       src={p.image || "https://placehold.co/300x200?text=No+Image"}
                       className="card-img-top"
                       alt={p.name}
-                      style={{ 
-                        height: "200px", 
+                      style={{
+                        height: "200px",
                         objectFit: "cover",
-                        cursor: 'pointer'
+                        cursor: "pointer",
                       }}
                     />
                   </Link>
-                  
+
                   <button
                     className="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
                     onClick={() => toggleWishlist(p._id)}
@@ -77,26 +77,31 @@ const Wishlist = () => {
                     ×
                   </button>
                 </div>
-                
+
                 <div className="card-body d-flex flex-column p-3">
                   <Link to={`/product/${p._id}`} className="text-decoration-none text-dark">
-                    <h6 className="card-title mb-2 text-truncate" style={{ cursor: 'pointer' }} title={p.name}>
+                    <h6
+                      className="card-title mb-2 text-truncate"
+                      style={{ cursor: "pointer" }}
+                      title={p.name}
+                    >
                       {p.name}
                     </h6>
                   </Link>
-                  
+
                   <div className="fw-bold mb-2">${p.price.toFixed(2)}</div>
                   <div className="text-muted small text-capitalize mb-3">{p.category}</div>
 
-                  <div className="d-flex gap-2 mt-auto">
+                  {/* Responsive Button Group */}
+                  <div className="d-flex flex-column flex-sm-row gap-2 mt-auto">
                     <button
-                      className="btn btn-primary flex-fill btn-sm"
+                      className="btn btn-primary btn-sm w-100"
                       onClick={() => handleMoveToCart(p)}
                     >
                       Move to Cart
                     </button>
                     <button
-                      className="btn btn-outline-danger btn-sm"
+                      className="btn btn-outline-danger btn-sm w-100"
                       onClick={() => toggleWishlist(p._id)}
                       title="Remove from wishlist"
                     >
@@ -112,21 +117,35 @@ const Wishlist = () => {
 
       {/* Size Selection Modal */}
       {showSizeModal && selectedProduct && (
-        <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Select Size</h5>
-                <button type="button" className="btn-close" onClick={() => setShowSizeModal(false)}></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowSizeModal(false)}
+                ></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Choose size for {selectedProduct.name}</label>
+                  <label className="form-label fw-bold">
+                    Choose size for {selectedProduct.name}
+                  </label>
                   <div className="d-flex gap-2 flex-wrap">
                     {["S", "M", "L", "XL"].map((size) => (
                       <button
                         key={size}
-                        className={`btn ${selectedSize === size ? 'btn-primary' : 'btn-outline-primary'}`}
+                        className={`btn ${
+                          selectedSize === size
+                            ? "btn-primary"
+                            : "btn-outline-primary"
+                        }`}
                         onClick={() => setSelectedSize(size)}
                       >
                         {size}
@@ -136,16 +155,16 @@ const Wishlist = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-secondary"
                   onClick={() => setShowSizeModal(false)}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary" 
+                <button
+                  type="button"
+                  className="btn btn-primary"
                   onClick={handleConfirmMoveToCart}
                   disabled={!selectedSize}
                 >
