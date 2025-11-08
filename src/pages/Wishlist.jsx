@@ -93,7 +93,7 @@ const Wishlist = () => {
                       className="btn btn-primary flex-fill btn-sm"
                       onClick={() => handleMoveToCart(p)}
                     >
-                      Add to Cart
+                      Move to Cart
                     </button>
                     <button
                       className="btn btn-outline-danger btn-sm"
