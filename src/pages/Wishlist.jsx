@@ -12,12 +12,15 @@ const Wishlist = () => {
   const items = products.filter((p) => p && p._id && wishlist.includes(p._id));
 
   const handleMoveToCart = (product) => {
-    if (product.category !== "electronics") {
+    const isClothing = ["men", "women", "kids"].includes(String(product.category).toLowerCase());
+    
+    if (isClothing) {
       setSelectedProduct(product);
       setSelectedSize("");
       setShowSizeModal(true);
     } else {
-      moveWishlistToCart(product._id);
+      addToCart(product._id, "");
+      toggleWishlist(product._id);
       toast.success(`${product.name} moved to cart!`);
     }
   };
@@ -29,7 +32,9 @@ const Wishlist = () => {
 
   const handleConfirmMoveToCart = () => {
     if (selectedProduct) {
-      if (selectedProduct.category !== "electronics" && !selectedSize) {
+      const isClothing = ["men", "women", "kids"].includes(String(selectedProduct.category).toLowerCase());
+      
+      if (isClothing && !selectedSize) {
         toast.error("Please select a size");
         return;
       }
@@ -130,12 +135,13 @@ const Wishlist = () => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label fw-bold">Choose size for {selectedProduct.name}</label>
-                  <div className="d-flex gap-2 flex-wrap">
-                    {["S", "M", "L", "XL"].map((size) => (
+                  <div className="d-flex gap-2 flex-wrap justify-content-center">
+                    {["S", "M", "L", "XL", "XXL"].map((size) => (
                       <button
                         key={size}
-                        className={`btn ${selectedSize === size ? 'btn-primary' : 'btn-outline-primary'}`}
+                        className={`btn ${selectedSize === size ? 'btn-dark' : 'btn-outline-dark'}`}
                         onClick={() => setSelectedSize(size)}
+                        style={{ minWidth: "50px" }}
                       >
                         {size}
                       </button>
