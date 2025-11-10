@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext.jsx";
+import { toast } from 'react-toastify';
 
 const Wishlist = () => {
   const { wishlist, products, moveWishlistToCart, toggleWishlist, addToCart } = useAppContext();
@@ -17,12 +18,19 @@ const Wishlist = () => {
       setShowSizeModal(true);
     } else {
       moveWishlistToCart(product._id);
+      toast.success(`${product.name} moved to cart!`);
     }
+  };
+
+  const handleRemoveFromWishlist = (product) => {
+    toggleWishlist(product._id);
+    toast.info(`${product.name} removed from wishlist!`);
   };
 
   const handleConfirmMoveToCart = () => {
     if (selectedProduct) {
       if (selectedProduct.category !== "electronics" && !selectedSize) {
+        toast.error("Please select a size");
         return;
       }
       
@@ -31,6 +39,7 @@ const Wishlist = () => {
       setShowSizeModal(false);
       setSelectedProduct(null);
       setSelectedSize("");
+      toast.success(`${selectedProduct.name} ${selectedSize ? `(Size: ${selectedSize})` : ''} moved to cart!`);
     }
   };
 
@@ -71,7 +80,7 @@ const Wishlist = () => {
                   
                   <button
                     className="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
-                    onClick={() => toggleWishlist(p._id)}
+                    onClick={() => handleRemoveFromWishlist(p)}
                     title="Remove from wishlist"
                   >
                     ×
@@ -88,7 +97,6 @@ const Wishlist = () => {
                   <div className="fw-bold mb-2">${p.price.toFixed(2)}</div>
                   <div className="text-muted small text-capitalize mb-3">{p.category}</div>
 
-                  {/* <- ONLY CHANGE: make buttons stack on xs and row on sm+ */}
                   <div className="d-flex flex-column flex-sm-row gap-2 mt-auto">
                     <button
                       className="btn btn-primary flex-fill btn-sm"
@@ -98,7 +106,7 @@ const Wishlist = () => {
                     </button>
                     <button
                       className="btn btn-outline-danger btn-sm"
-                      onClick={() => toggleWishlist(p._id)}
+                      onClick={() => handleRemoveFromWishlist(p)}
                       title="Remove from wishlist"
                     >
                       Remove
@@ -111,7 +119,6 @@ const Wishlist = () => {
         </div>
       )}
 
-      {/* Size Selection Modal */}
       {showSizeModal && selectedProduct && (
         <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
           <div className="modal-dialog modal-dialog-centered">

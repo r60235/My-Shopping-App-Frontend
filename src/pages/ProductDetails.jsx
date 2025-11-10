@@ -19,7 +19,7 @@ const ProductDetails = () => {
         if (foundProduct) {
           setProduct(foundProduct);
         } else {
-          const response = await fetch(`http://localhost:5001/product/${id}`);
+            const response = await fetch(`https://my-shopping-app-backend.vercel.app/product/${id}`);
           if (response.ok) {
             const productData = await response.json();
             setProduct(productData);
@@ -71,7 +71,16 @@ const ProductDetails = () => {
     }
   };
 
-  // Function to render star rating
+  const handleWishlistClick = () => {
+    const isInWishlist = wishlist.includes(product._id);
+    toggleWishlist(product._id);
+    if (!isInWishlist) {
+      toast.success(`${product.name} added to wishlist!`);
+    } else {
+      toast.info(`${product.name} removed from wishlist!`);
+    }
+  };
+
   const renderRating = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -130,7 +139,6 @@ const ProductDetails = () => {
         <div className="col-12 col-md-6">
           <h3 className="h4 h-md-3">{product.name}</h3>
           
-          {/* ADDED: Rating Display */}
           <div className="mb-2">
             <div className="d-flex align-items-center">
               <div className="me-2">
@@ -194,7 +202,7 @@ const ProductDetails = () => {
             
             <button 
               className={`btn mb-2 ${inWishlist ? 'btn-danger' : 'btn-outline-danger'}`} 
-              onClick={() => toggleWishlist(product._id)}
+              onClick={handleWishlistClick}
             >
               {inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
             </button>
@@ -249,7 +257,6 @@ const ProductDetails = () => {
                     <div className="card-body">
                       <div className="fw-bold small text-truncate">{r.name}</div>
                       <div className="text-primary">${r.price?.toFixed(2)}</div>
-                      {/* ADDED: Rating in related products */}
                       {r.rating && (
                         <div className="small text-warning">
                           {renderRating(r.rating)}

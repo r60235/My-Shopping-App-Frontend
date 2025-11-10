@@ -13,7 +13,6 @@ const ProductCard = ({ product }) => {
   const cartItemsForProduct = cart.filter(item => item.productId === product._id);
   const inCart = cartItemsForProduct.length > 0;
 
-  // Function to render star rating
   const renderRating = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -44,6 +43,16 @@ const ProductCard = ({ product }) => {
     }
   };
 
+  const handleWishlistClick = () => {
+    const isInWishlist = wishlist.includes(product._id);
+    toggleWishlist(product._id);
+    if (!isInWishlist) {
+      toast.success(`${product.name} added to wishlist!`);
+    } else {
+      toast.info(`${product.name} removed from wishlist!`);
+    }
+  };
+
   const handleSizeSelect = (size) => {
     setShowSizeModal(false);
     addToCart(product._id, size);
@@ -69,7 +78,7 @@ const ProductCard = ({ product }) => {
 
           <button
             className={`btn btn-sm position-absolute top-0 end-0 m-2 ${inWish ? "btn-danger" : "btn-outline-light"}`}
-            onClick={() => toggleWishlist(product._id)}
+            onClick={handleWishlistClick}
           >
             {inWish ? '♥' : '♥'}
           </button>
@@ -80,7 +89,6 @@ const ProductCard = ({ product }) => {
             <h6 className="card-title mb-2 text-truncate" style={{ cursor: 'pointer' }} title={product.name}>{product.name}</h6>
           </Link>
 
-          {/* rating Display */}
           <div className="mb-2">
             <div className="d-flex align-items-center justify-content-center">
               <div className="me-1" style={{ fontSize: '0.8rem' }}>

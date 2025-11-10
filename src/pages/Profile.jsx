@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext.jsx";
+import { toast } from 'react-toastify';
 
 const Profile = () => {
   const { user, setUser, API_BASE } = useAppContext();
   const [addresses, setAddresses] = useState(
     JSON.parse(localStorage.getItem("addresses")) || []
   );
-  const [newAddress, setNewAddress] = useState("");
+  const [newAddress, setNewAddress] = useState({ name: "", phone: "", street: "", city: "", state: "", pincode: "" });
+  const [editingIndex, setEditingIndex] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +23,6 @@ const Profile = () => {
       const response = await fetch(`${API_BASE}/orders/${user.email}`);
       if (response.ok) {
         const data = await response.json();
-        // Get last 6 orders (most recent first)
         const sortedOrders = (data.orders || []).sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
         setOrders(sortedOrders.slice(0, 6));
       }
@@ -32,21 +33,88 @@ const Profile = () => {
     }
   };
 
+  const parseAddress = (address) => {
+    if (address.includes(', ') && address.split(', ').length >= 6) {
+      const parts = address.split(', ');
+      return {
+        name: parts[0] || "",
+        phone: parts[1] || "",
+        street: parts[2] || "",
+        city: parts[3] || "",
+        state: parts[4] || "",
+        pincode: parts[5] || ""
+      };
+    } else if (address.includes(', ') && address.split(', ').length === 5) {
+      const parts = address.split(', ');
+      const statePincode = parts[4].split(' - ');
+      return {
+        name: parts[0] || "",
+        phone: parts[1] || "",
+        street: parts[2] || "",
+        city: parts[3] || "",
+        state: statePincode[0] || "",
+        pincode: statePincode[1] || ""
+      };
+    } else {
+      return { 
+        name: "", 
+        phone: "", 
+        street: address, 
+        city: "", 
+        state: "", 
+        pincode: "" 
+      };
+    }
+  };
+
   const handleAddAddress = () => {
-    if (!newAddress.trim()) {
-      alert("Please enter an address");
+    if (!newAddress.name.trim() || !newAddress.phone.trim() || !newAddress.street.trim() || !newAddress.city.trim() || !newAddress.state.trim() || !newAddress.pincode.trim()) {
+      toast.error("Please fill all address fields");
       return;
     }
-    const updated = [...addresses, newAddress.trim()];
+    
+    const formattedAddress = `${newAddress.name}, ${newAddress.phone}, ${newAddress.street}, ${newAddress.city}, ${newAddress.state}, ${newAddress.pincode}`;
+    const updated = [...addresses, formattedAddress];
     setAddresses(updated);
     localStorage.setItem("addresses", JSON.stringify(updated));
-    setNewAddress("");
+    setNewAddress({ name: "", phone: "", street: "", city: "", state: "", pincode: "" });
+    toast.success("Address added successfully!");
+  };
+
+  const handleEditAddress = (index) => {
+    const address = addresses[index];
+    const parsedAddress = parseAddress(address);
+    setNewAddress(parsedAddress);
+    setEditingIndex(index);
+  };
+
+  const handleUpdateAddress = () => {
+    if (!newAddress.name.trim() || !newAddress.phone.trim() || !newAddress.street.trim() || !newAddress.city.trim() || !newAddress.state.trim() || !newAddress.pincode.trim()) {
+      toast.error("Please fill all address fields");
+      return;
+    }
+    
+    const formattedAddress = `${newAddress.name}, ${newAddress.phone}, ${newAddress.street}, ${newAddress.city}, ${newAddress.state}, ${newAddress.pincode}`;
+    const updated = [...addresses];
+    updated[editingIndex] = formattedAddress;
+    setAddresses(updated);
+    localStorage.setItem("addresses", JSON.stringify(updated));
+    setNewAddress({ name: "", phone: "", street: "", city: "", state: "", pincode: "" });
+    setEditingIndex(null);
+    toast.success("Address updated successfully!");
+  };
+
+  const handleCancelEdit = () => {
+    setNewAddress({ name: "", phone: "", street: "", city: "", state: "", pincode: "" });
+    setEditingIndex(null);
+    toast.info("Address editing cancelled");
   };
 
   const handleDeleteAddress = (indexToDelete) => {
     const updated = addresses.filter((_, index) => index !== indexToDelete);
     setAddresses(updated);
     localStorage.setItem("addresses", JSON.stringify(updated));
+    toast.success("Address deleted successfully!");
   };
 
   const handleLogout = () => {
@@ -83,16 +151,26 @@ const Profile = () => {
             {addresses.length > 0 ? (
               <div className="mb-3">
                 {addresses.map((addr, idx) => (
-                  <div key={idx} className="card mb-2">
-                    <div className="card-body py-2">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="small">{addr}</span>
-                        <button 
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => handleDeleteAddress(idx)}
-                        >
-                          Delete
-                        </button>
+                  <div key={idx} className="card mb-3">
+                    <div className="card-body p-3">
+                      <div className="d-flex flex-column">
+                        <div className="mb-2">
+                          <span className="small text-break">{addr}</span>
+                        </div>
+                        <div className="d-flex gap-2 justify-content-end">
+                          <button 
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => handleEditAddress(idx)}
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => handleDeleteAddress(idx)}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -103,19 +181,78 @@ const Profile = () => {
             )}
 
             <div className="mb-3">
-              <label className="form-label fw-bold">Add New Address</label>
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter your complete address"
-                  value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddAddress()}
-                />
-                <button className="btn btn-dark" onClick={handleAddAddress}>
-                  Add Address
-                </button>
+              <label className="form-label fw-bold">{editingIndex !== null ? 'Edit Address' : 'Add New Address'}</label>
+              <div className="row g-2">
+                <div className="col-12">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Full Name"
+                    value={newAddress.name}
+                    onChange={(e) => setNewAddress({...newAddress, name: e.target.value})}
+                  />
+                </div>
+                <div className="col-12">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Phone Number"
+                    value={newAddress.phone}
+                    onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})}
+                  />
+                </div>
+                <div className="col-12">
+                  <textarea
+                    className="form-control"
+                    rows="2"
+                    placeholder="Street Address"
+                    value={newAddress.street}
+                    onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
+                  />
+                </div>
+                <div className="col-6">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="City"
+                    value={newAddress.city}
+                    onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
+                  />
+                </div>
+                <div className="col-6">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="State"
+                    value={newAddress.state}
+                    onChange={(e) => setNewAddress({...newAddress, state: e.target.value})}
+                  />
+                </div>
+                <div className="col-12">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Pincode"
+                    value={newAddress.pincode}
+                    onChange={(e) => setNewAddress({...newAddress, pincode: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="d-flex gap-2 mt-2">
+                {editingIndex !== null ? (
+                  <>
+                    <button className="btn btn-primary flex-fill" onClick={handleUpdateAddress}>
+                      Update Address
+                    </button>
+                    <button className="btn btn-secondary" onClick={handleCancelEdit}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button className="btn btn-dark w-100" onClick={handleAddAddress}>
+                    Add Address
+                  </button>
+                )}
               </div>
             </div>
 

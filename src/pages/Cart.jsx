@@ -8,7 +8,7 @@ const Cart = () => {
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
-  const [newAddress, setNewAddress] = useState("");
+  const [newAddress, setNewAddress] = useState({ name: "", phone: "", street: "", city: "", state: "", pincode: "" });
   const [placingOrder, setPlacingOrder] = useState(false);
   const navigate = useNavigate();
   
@@ -44,9 +44,9 @@ const Cart = () => {
   };
 
   const handleMoveToWishlist = (productId, productName) => {
-    toggleWishlist(productId);
     const isInWishlist = wishlist.includes(productId);
-    if (isInWishlist) {
+    toggleWishlist(productId);
+    if (!isInWishlist) {
       toast.success(`${productName} added to wishlist!`);
     } else {
       toast.info(`${productName} removed from wishlist!`);
@@ -54,16 +54,17 @@ const Cart = () => {
   };
 
   const handleAddNewAddress = () => {
-    if (!newAddress.trim()) {
-      toast.error("Please enter an address");
+    if (!newAddress.name.trim() || !newAddress.phone.trim() || !newAddress.street.trim() || !newAddress.city.trim() || !newAddress.state.trim() || !newAddress.pincode.trim()) {
+      toast.error("Please fill all address fields");
       return;
     }
     
-    const updatedAddresses = [...addresses, newAddress.trim()];
+    const formattedAddress = `${newAddress.name}, ${newAddress.phone}, ${newAddress.street}, ${newAddress.city}, ${newAddress.state} - ${newAddress.pincode}`;
+    const updatedAddresses = [...addresses, formattedAddress];
     localStorage.setItem("addresses", JSON.stringify(updatedAddresses));
-    setNewAddress("");
+    setNewAddress({ name: "", phone: "", street: "", city: "", state: "", pincode: "" });
     setShowAddAddressModal(false);
-    setSelectedAddress(newAddress.trim());
+    setSelectedAddress(formattedAddress);
     toast.success("Address added successfully!");
   };
 
@@ -111,7 +112,6 @@ const Cart = () => {
       });
 
       if (response.ok) {
-        // Clear cart by removing each item individually
         const cartCopy = [...cart];
         cartCopy.forEach(item => {
           removeFromCart(item.id);
@@ -121,7 +121,6 @@ const Cart = () => {
           autoClose: 5000,
         });
         
-        // Navigate to profile page to see orders
         navigate('/profile');
       } else {
         throw new Error('Failed to place order');
@@ -170,7 +169,6 @@ const Cart = () => {
                     
                     return (
                       <div key={item.id} className="cart-item border-bottom p-3">
-                        {/* desktop */}
                         <div className="d-none d-md-flex row align-items-center">
                           <div className="col-md-2">
                             <Link to={`/product/${item.product._id}`} className="text-decoration-none">
@@ -243,7 +241,6 @@ const Cart = () => {
                           </div>
                         </div>
 
-                        {/* Mobile View */}
                         <div className="d-md-none">
                           <div className="row">
                             <div className="col-4">
@@ -269,7 +266,6 @@ const Cart = () => {
                                 <span className="badge bg-light text-dark border" style={{ fontSize: '0.7rem' }}>Size: {item.size}</span>
                               )}
                               
-                              {/* Price below photo on mobile */}
                               <div className="mt-2">
                                 <div className="text-primary fw-bold" style={{ fontSize: '0.9rem' }}>
                                   ${item.product.price.toFixed(2)}
@@ -279,7 +275,6 @@ const Cart = () => {
                             </div>
                           </div>
                           
-                          {/* Quantity controls in middle on mobile */}
                           <div className="row mt-3">
                             <div className="col-12">
                               <div className="d-flex justify-content-between align-items-center">
@@ -316,7 +311,6 @@ const Cart = () => {
                             </div>
                           </div>
 
-                          {/* Action buttons on mobile */}
                           <div className="row mt-2">
                             <div className="col-12">
                               <div className="d-flex gap-2">
@@ -447,7 +441,6 @@ const Cart = () => {
         )}
       </div>
 
-      {/* Address Selection Modal */}
       {showAddressModal && (
         <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
           <div className="modal-dialog modal-dialog-centered">
@@ -508,7 +501,6 @@ const Cart = () => {
         </div>
       )}
 
-      {/* add address */}
       {showAddAddressModal && (
         <div className="modal show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
           <div className="modal-dialog modal-dialog-centered">
@@ -518,14 +510,61 @@ const Cart = () => {
                 <button type="button" className="btn-close" onClick={() => setShowAddAddressModal(false)}></button>
               </div>
               <div className="modal-body">
-                <div className="mb-3">
-                  <label className="form-label">Enter your complete address</label>
-                  <textarea
-                    className="form-control"
-                    rows="3"
-                    value={newAddress}
-                    onChange={(e) => setNewAddress(e.target.value)}
-                  />
+                <div className="row g-2">
+                  <div className="col-12">
+                    <label className="form-label">Full Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAddress.name}
+                      onChange={(e) => setNewAddress({...newAddress, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Phone Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAddress.phone}
+                      onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Street Address</label>
+                    <textarea
+                      className="form-control"
+                      rows="2"
+                      value={newAddress.street}
+                      onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label">City</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAddress.city}
+                      onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label">State</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAddress.state}
+                      onChange={(e) => setNewAddress({...newAddress, state: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">Pincode</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAddress.pincode}
+                      onChange={(e) => setNewAddress({...newAddress, pincode: e.target.value})}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">
@@ -540,7 +579,7 @@ const Cart = () => {
                   type="button" 
                   className="btn btn-primary" 
                   onClick={handleAddNewAddress}
-                  disabled={!newAddress.trim()}
+                  disabled={!newAddress.name.trim() || !newAddress.phone.trim() || !newAddress.street.trim() || !newAddress.city.trim() || !newAddress.state.trim() || !newAddress.pincode.trim()}
                 >
                   Save Address
                 </button>

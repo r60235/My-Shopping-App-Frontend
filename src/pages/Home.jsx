@@ -14,7 +14,7 @@ const Home = () => {
     <>
       <div className="w-100">
         <img
-          src="/banner3.jpg"
+          src="/banner69.jpg"
           className="img-fluid w-100"
           alt="Main Banner"
           style={{ maxHeight: "300px", objectFit: "cover" }}
