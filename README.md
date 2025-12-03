@@ -22,10 +22,9 @@ A full-stack e-commerce shopping application where you can browse products, sear
 
 ```
 git clone https://github.com/r60235/My-Shopping-App-Frontend.git
-git clone https://github.com/r60235/My-Shopping-App-Backend.git
 cd <your-repo>
 npm install
-npm run dev      # or `npm start` / `yarn dev`
+npm run dev      
 ```
 
 ## Technologies
